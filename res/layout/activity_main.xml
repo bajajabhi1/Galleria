@@ -1,0 +1,33 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent" 
+              android:layout_height="fill_parent" 
+              android:orientation="vertical" >
+
+    <Button
+        android:id="@+id/upload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Upload" />
+    <Button
+        android:id="@+id/detectFace"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="FaceDetection" />
+    
+     <ImageView
+        android:id="@+id/imagebox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+     
+     <edu.columbia.cvml.galleria.activity.FaceDetectorView
+        android:id="@+id/faceDetbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+     
+     <TextView
+    	android:id="@+id/annotations"
+    	android:layout_width="wrap_content"
+    	android:layout_height="wrap_content"
+    	android:gravity="left" />
+
+</LinearLayout>
