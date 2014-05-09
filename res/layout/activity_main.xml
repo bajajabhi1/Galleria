@@ -13,7 +13,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="FaceDetection" />
-    
+         <TextView
+    	android:id="@+id/annotations"
+    	android:layout_width="wrap_content"
+    	android:layout_height="wrap_content"
+    	android:gravity="left" />
+         
      <ImageView
         android:id="@+id/imagebox"
         android:layout_width="wrap_content"
@@ -24,10 +29,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
      
-     <TextView
-    	android:id="@+id/annotations"
-    	android:layout_width="wrap_content"
-    	android:layout_height="wrap_content"
-    	android:gravity="left" />
+
 
 </LinearLayout>

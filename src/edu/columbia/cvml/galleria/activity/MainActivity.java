@@ -2,6 +2,9 @@ package edu.columbia.cvml.galleria.activity;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -22,9 +25,12 @@ import android.widget.Toast;
 
 import com.example.galleria.R;
 
-import edu.columbia.cvml.galleria.async.AsyncTaskRequestResponse;
+import edu.columbia.cvml.galleria.VO.FeatureValueObject;
 import edu.columbia.cvml.galleria.async.AnnotatorRequestSenderAsync;
+import edu.columbia.cvml.galleria.async.AsyncTaskRequestResponse;
+import edu.columbia.cvml.galleria.async.FaceDetectorAsync;
 import edu.columbia.cvml.galleria.services.ImageDetectorService;
+import edu.columbia.cvml.galleria.util.InvertedIndexManager;
 
 public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 
@@ -36,15 +42,17 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 		Button button = (Button) findViewById(R.id.upload);
 		button.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				uploadImage("20130810_155042.jpg");
+				//uploadImage("20130810_155042.jpg");
+				TextView text = (TextView) findViewById(R.id.annotations);
+				text.setText(loadIndexFile());
 			}
 		});
 		
 		button = (Button) findViewById(R.id.detectFace);
 		button.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				detectFaces();
-				//isMyServiceRunning();
+				//detectFaces();
+				isMyServiceRunning();
 			}
 		});
 		
@@ -54,6 +62,29 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 		i.putExtra("KEY1", "Value to be used by the service");
 		getApplicationContext().startService(i);
 		Log.i(LOG_TAG, "Service start called");
+		
+		TextView text = (TextView) findViewById(R.id.annotations);
+		text.setText(loadIndexFile());
+		
+	}
+	
+	private String loadIndexFile()
+	{
+		InvertedIndexManager annotatorIdxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
+		Map<String,List<FeatureValueObject>> annotoMap = annotatorIdxMapMgr.loadIndex();
+		String ann = "";
+		Set<String> keys = annotoMap.keySet();
+		for(String key : keys)
+		{
+			ann = ann + key + "::";
+			List<FeatureValueObject> fvoList = annotoMap.get(key);
+			for(FeatureValueObject fvo : fvoList)
+			{
+				ann = ann + fvo.toString() + ",";
+			}
+			ann = ann + "+++\n";
+		}
+		return ann;
 	}
 	
 	private void isMyServiceRunning() {

@@ -4,18 +4,20 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.StreamCorruptedException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import android.content.Context;
+import android.util.Log;
 import edu.columbia.cvml.galleria.VO.FeatureValueObject;
 
 public class InvertedIndexManager {
 
 	String invIdxFile = null;
+	private static final String LOG_TAG = "InvertedIndexManager";
 	Context ctx = null;
 	Map<String,List<FeatureValueObject>> indexMap = new HashMap<String,List<FeatureValueObject>>();
 
@@ -26,15 +28,78 @@ public class InvertedIndexManager {
 	}
 
 	/**
-	 *  Input is image file name and the string of annotations seperated by seperator
+	 *  Input is image file name and the string of annotations separated by separator
 	 */
 	public void addImageEntry(List<FeatureValueObject> features)
 	{
-		// TODO update the indexMap
-		// write it to file
+		Log.d(LOG_TAG," in addImageEntry");
+		if(indexMap.isEmpty())
+		{
+			Log.d(LOG_TAG," in addImageEntry : indexMap is empty ");
+			List<FeatureValueObject> fvoList = null;
+			for(FeatureValueObject fvo : features)
+			{
+				fvoList = new LinkedList<FeatureValueObject>();
+				fvoList.add(fvo);
+				indexMap.put(fvo.getFeature(), fvoList);
+			}
+		}
+		else 
+		{
+			for(FeatureValueObject fvo : features)
+
+			{
+				List<FeatureValueObject> fvoList = indexMap.get(fvo.getFeature());
+				if(fvoList == null)
+				{
+					Log.d(LOG_TAG," in addImageEntry : not found - " +fvo.getFeature());
+					List<FeatureValueObject> fvoNewList = new LinkedList<FeatureValueObject>();
+					fvoNewList.add(fvo);
+					indexMap.put(fvo.getFeature(), fvoNewList);
+				}
+				else
+				{
+					Log.d(LOG_TAG," in addImageEntry : found - " +fvo.getFeature());
+					int idx = 0;
+					for(FeatureValueObject mapFvo : fvoList)
+					{
+						if(fvo.getFeatureValue() > mapFvo.getFeatureValue())
+						{
+							fvoList.add(idx, fvo);
+						}
+						idx++;
+					}
+				}
+			}
+		}
+
 	}
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+
+	public void addSingleFeatureEntry(FeatureValueObject feature)
+	{
+		Log.d(LOG_TAG," in addImageEntry");
+		if(indexMap.isEmpty())
+		{
+			Log.d(LOG_TAG," in addImageEntry : indexMap is empty ");
+			List<FeatureValueObject> fvoList = new LinkedList<FeatureValueObject>();
+			fvoList.add(feature);
+			indexMap.put(feature.getFeature(), fvoList);
+		}
+		else 
+		{
+			List<FeatureValueObject> fvoList = indexMap.get(feature.getFeature());
+			if(fvoList == null)
+			{
+				Log.d(LOG_TAG," in addImageEntry : not found - " +feature.getFeature());
+				List<FeatureValueObject> fvoNewList = new LinkedList<FeatureValueObject>();
+				fvoNewList.add(feature);
+				indexMap.put(feature.getFeature(), fvoNewList);
+			}
+			else
+			{
+				fvoList.add(0,feature); // Add in front of list as latest
+			}
+		}
 
 	}
 
@@ -42,31 +107,23 @@ public class InvertedIndexManager {
 	{
 		return indexMap;
 	}
-	
+
 	public Map<String,List<FeatureValueObject>> loadIndex()
 	{
 		ObjectInputStream inputStream = null;
-		Map<String,List<FeatureValueObject>> idxMap = null;
-		try {
+		try
+		{
 			inputStream = new ObjectInputStream(ctx.openFileInput(invIdxFile));
-			idxMap = (HashMap<String,List<FeatureValueObject>>)inputStream.readObject();         
-			System.out.println("Reading from the file");
-			Set<String> keys = idxMap.keySet();
+			indexMap = (HashMap<String,List<FeatureValueObject>>)inputStream.readObject();         
+			Log.d(LOG_TAG,"Reading from the file");
+			Set<String> keys = indexMap.keySet();
 			for(String key : keys)
 			{
-				System.out.println(key + " => " + idxMap.get(key));
+				Log.d(LOG_TAG,key + " => " + indexMap.get(key));
 			}
-		} catch (StreamCorruptedException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+			//Log.e(LOG_TAG,e.getMessage());
 			e.printStackTrace();
 		}
 		finally
@@ -80,7 +137,7 @@ public class InvertedIndexManager {
 				}
 			}
 		}
-		return idxMap;
+		return indexMap;
 	}
 
 	public void writeIndex()
@@ -88,10 +145,11 @@ public class InvertedIndexManager {
 		ObjectOutputStream outStream = null;
 		try
 		{
-			outStream = new ObjectOutputStream(ctx.openFileOutput(invIdxFile, Context.MODE_APPEND));
+			outStream = new ObjectOutputStream(ctx.openFileOutput(invIdxFile,Context.MODE_PRIVATE));
 			outStream.writeObject(indexMap);
 			outStream.flush();
 			outStream.close();
+			Log.d(LOG_TAG,"Index written to file");
 		} 
 		catch (FileNotFoundException e)
 		{

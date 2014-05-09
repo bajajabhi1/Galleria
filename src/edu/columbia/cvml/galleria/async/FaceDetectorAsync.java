@@ -15,8 +15,10 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 
 	public static final String ASYNC_TASK_CODE = "FaceDetector";
 	public static final String INDEX_FILE = "FaceDetector_INDEX";
+	public static final String FACEDETECTOR_FILENAME_SEPARATOR = ":";
 	public AsyncTaskRequestResponse delegate=null;
-	private int MAX_NO_OF_FACES = 5;
+	private String imageFileName = null;
+	private int MAX_NO_OF_FACES = 8;
 	private FaceDetector myFaceDetect; 
 	private FaceDetector.Face[] myFace;
 	float myEyesDistance;
@@ -25,9 +27,10 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 	private int DESIREDHEIGHT = 640;
 	private String LOG_TAG = "FaceDetector";
 
-	public FaceDetectorAsync(AsyncTaskRequestResponse resp)
+	public FaceDetectorAsync(AsyncTaskRequestResponse resp, String fileName)
 	{
 		this.delegate = resp;
+		this.imageFileName = fileName;
 	}
 
 	protected String doInBackground(Bitmap... origBitMap)
@@ -35,6 +38,8 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 		String response = "";
 		Bitmap scaledBitmap = ScalingUtility.createScaledBitmap(origBitMap[0], DESIREDWIDTH, DESIREDHEIGHT, ScalingLogic.FIT);
 		Bitmap maskBitmap = Bitmap.createBitmap( scaledBitmap.getWidth(), scaledBitmap.getHeight(), Bitmap.Config.RGB_565 );
+		Log.i(LOG_TAG, "scaledBitmap.getWidth() - " + scaledBitmap.getWidth());
+		Log.i(LOG_TAG, "scaledBitmap.getHeight() - " + scaledBitmap.getHeight());
 		Canvas c = new Canvas();
 		c.setBitmap(maskBitmap);
 		Paint p = new Paint();
@@ -76,7 +81,7 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 	}
 
 	protected void onPostExecute(String result) {
-		Log.i(LOG_TAG, "Result of Image Detection - "+result);
-		delegate.processFinish(ASYNC_TASK_CODE, result);
+		Log.i(LOG_TAG, "Result of Image Detection - "+ imageFileName + FACEDETECTOR_FILENAME_SEPARATOR + result);
+		delegate.processFinish(ASYNC_TASK_CODE, imageFileName + FACEDETECTOR_FILENAME_SEPARATOR + result);
 	}
 }

@@ -176,7 +176,7 @@ public class ImageDetectorService extends Service
 
 		public void sendFaceDetectionAndAnnotatorRequest(Bitmap bitmap, Bitmap bitMap2, String imageFileName)
 		{
-			new FaceDetectorAsync(this).execute(bitMap2);
+			new FaceDetectorAsync(this,imageFileName).execute(bitMap2);
 			bitmap = ScalingUtility.createScaledBitmap(bitmap, ANNO_DESIREDWIDTH, ANNO_DESIREDHEIGHT, ScalingLogic.FIT);
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();			
 			// CompressFormat set up to JPG, you can change to PNG or whatever you want;
@@ -224,15 +224,21 @@ public class ImageDetectorService extends Service
 			{
 				Log.d(LOG_TAG, "Processing Annotator Finished");
 				Toast.makeText(getApplicationContext(), "Got the annotations - " + output, Toast.LENGTH_LONG).show();
-				//List<FeatureValueObject> features = getFeatureList(output);
-				//annotatorIdxMapMgr.addImageEntry(features);
-				FileOperation.writeFileToInternalStorage(getApplicationContext(), AnnotatorRequestSenderAsync.INDEX_FILE, output + LINE_END);
+				List<FeatureValueObject> features = getFeatureList(output);
+				annotatorIdxMapMgr.addImageEntry(features);
+				annotatorIdxMapMgr.writeIndex();
+				//FileOperation.writeFileToInternalStorage(getApplicationContext(), AnnotatorRequestSenderAsync.INDEX_FILE, output + LINE_END);
 			}
 			else if(asyncCode == FaceDetectorAsync.ASYNC_TASK_CODE)
 			{
 				Log.d(LOG_TAG, "Processing Face Detection Finished");
 				Toast.makeText(getApplicationContext(), "Faces Detected - " + output, Toast.LENGTH_LONG).show();
-				FileOperation.writeFileToInternalStorage(getApplicationContext(), FaceDetectorAsync.INDEX_FILE, output + LINE_END);
+				Log.d(LOG_TAG, "Faces Detected - " + output);
+				String fileName = output.substring(0,output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR)+1);
+				String faces = output.substring(output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR)+1);
+				FeatureValueObject fvo = new FeatureValueObject(fileName, faces, 1f);
+				faceDetectorIdxMapMgr.addSingleFeatureEntry(fvo);
+				faceDetectorIdxMapMgr.writeIndex();
 			}
 		}
 		
@@ -253,7 +259,8 @@ public class ImageDetectorService extends Service
 					JSONObject c = featuresJson.getJSONObject(i);
 					String featureName = c.getString(AnnotatorRequestSenderAsync.TAG_KEY);
 					String featureValue = c.getString(AnnotatorRequestSenderAsync.TAG_VALUE);
-					fvobj = new FeatureValueObject(imageName, featureName, featureValue);
+					Float featureFloatValue = Float.valueOf(featureValue);
+					fvobj = new FeatureValueObject(imageName, featureName, featureFloatValue);
 					featureList.add(fvobj);
 				}
 			} catch (JSONException e) {

@@ -1,11 +1,17 @@
 package edu.columbia.cvml.galleria.VO;
 
-public class FeatureValueObject {
+import java.io.Serializable;
+
+public class FeatureValueObject implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	String feature = null;
 	String imageName = null;
-	String featureValue = null;
+	Float featureValue = null;
 	
-	public FeatureValueObject(String imageName, String featureName, String featureValue)
+	public FeatureValueObject(String imageName, String featureName, Float featureValue)
 	{
 		this.feature = featureName;
 		this.featureValue = featureValue;
@@ -24,10 +30,15 @@ public class FeatureValueObject {
 	public void setImageName(String imageName) {
 		this.imageName = imageName;
 	}
-	public String getFeatureValue() {
+	public Float getFeatureValue() {
 		return featureValue;
 	}
-	public void setFeatureValue(String featureValue) {
+	public void setFeatureValue(Float featureValue) {
 		this.featureValue = featureValue;
+	}
+	
+	public String toString()
+	{
+		return imageName+":"+featureValue;
 	}
 }
