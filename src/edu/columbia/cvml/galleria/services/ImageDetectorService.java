@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +32,6 @@ import edu.columbia.cvml.galleria.VO.FeatureValueObject;
 import edu.columbia.cvml.galleria.async.AnnotatorRequestSenderAsync;
 import edu.columbia.cvml.galleria.async.AsyncTaskRequestResponse;
 import edu.columbia.cvml.galleria.async.FaceDetectorAsync;
-import edu.columbia.cvml.galleria.util.FileOperation;
 import edu.columbia.cvml.galleria.util.InvertedIndexManager;
 import edu.columbia.cvml.galleria.util.ScalingUtility;
 import edu.columbia.cvml.galleria.util.ScalingUtility.ScalingLogic;
@@ -41,7 +42,6 @@ public class ImageDetectorService extends Service
 	private static final String LOG_TAG = "ImageDetectorService";
 	private static final String PREFS_FILE_NAME = "ImageDetectorServicePref";
 	private static final String PREFS_NAME_LAST_IMAGE_TIME = "PREFS_NAME_LAST_IMAGE_TIME";
-	private static final String LINE_END = "\r\n";
 	private static final int ANNO_DESIREDWIDTH = 640;
 	private static final int ANNO_DESIREDHEIGHT = 480;
 	
@@ -149,10 +149,19 @@ public class ImageDetectorService extends Service
 			String listOfImage = "";
 			Cursor cursor = MediaStore.Images.Media.query(getContentResolver(), uri, projection, MediaStore.MediaColumns.DATE_ADDED + ">?",
 					new String[] { String.valueOf(lastImageTime)}, MediaStore.MediaColumns.DATE_ADDED + " asc");
-
+			
+			Set<String> currImgSet = new LinkedHashSet<String>();
 			while (cursor.moveToNext()) 
 			{
 				String displayName = cursor.getString(cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME));
+				Log.d(LOG_TAG, "Processing -" + displayName+"-");
+				if(currImgSet.contains(displayName)) // Skip this image if already processed
+				{
+					Log.d(LOG_TAG, "Found again" + displayName+"-");
+					continue;
+				}
+				
+				currImgSet.add(displayName);
 				int dateCreated = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns.DATE_ADDED));
 				int id = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
 				Uri imageUri = Uri.withAppendedPath(uri, "" + id);
@@ -168,53 +177,33 @@ public class ImageDetectorService extends Service
 					e.printStackTrace();
 				}
 				listOfImage = listOfImage + displayName + "," + dateCreated + eol;
-				Log.e(LOG_TAG, "Processing - " + displayName + "," + dateCreated);
+				Log.d(LOG_TAG, "Processing - " + displayName + "," + dateCreated);
 				lastImageTime = dateCreated;
 			}
+			cursor.close();
 			Log.d(LOG_TAG, listOfImage);
 		}
 
 		public void sendFaceDetectionAndAnnotatorRequest(Bitmap bitmap, Bitmap bitMap2, String imageFileName)
 		{
 			new FaceDetectorAsync(this,imageFileName).execute(bitMap2);
-			bitmap = ScalingUtility.createScaledBitmap(bitmap, ANNO_DESIREDWIDTH, ANNO_DESIREDHEIGHT, ScalingLogic.FIT);
+			
+			if(bitmap.getWidth() > bitmap.getHeight())
+			{
+				bitmap = ScalingUtility.createScaledBitmap(bitmap, ANNO_DESIREDWIDTH, ANNO_DESIREDHEIGHT, ScalingLogic.FIT);
+			}
+			else
+			{
+				bitmap = ScalingUtility.createScaledBitmap(bitmap, ANNO_DESIREDHEIGHT, ANNO_DESIREDWIDTH, ScalingLogic.FIT);
+			}			
+			Log.d(LOG_TAG,bitmap.getWidth() + ". " + bitmap.getHeight());
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();			
 			// CompressFormat set up to JPG, you can change to PNG or whatever you want;
 			bitmap.compress(CompressFormat.JPEG, 100, bos);
+			Log.d(LOG_TAG,bitmap.getWidth() + ". " + bitmap.getHeight());
 			byte[] data = bos.toByteArray();
 			InputStream bs = new ByteArrayInputStream(data);
 			new AnnotatorRequestSenderAsync(this,imageFileName).execute(bs);
-		}
-
-		public String convertResponseToString(InputStream inputStream ) throws IllegalStateException, IOException
-		{
-			String res = "";
-			StringBuffer buffer = new StringBuffer();
-			{                
-				byte[] data = new byte[512];
-				int len = 0;
-				try
-				{
-					while (-1 != (len = inputStream.read(data)))
-					{
-						buffer.append(new String(data, 0, len)); //converting to string and appending  to stringbuffer
-					}
-				}
-				catch (IOException e)                
-				{                    
-					e.printStackTrace();                
-				}
-				try
-				{
-					inputStream.close(); // closing the stream                
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}                
-				res = buffer.toString();  // converting stringbuffer to string
-			}
-			return res;
 		}
 
 		@Override
@@ -227,7 +216,6 @@ public class ImageDetectorService extends Service
 				List<FeatureValueObject> features = getFeatureList(output);
 				annotatorIdxMapMgr.addImageEntry(features);
 				annotatorIdxMapMgr.writeIndex();
-				//FileOperation.writeFileToInternalStorage(getApplicationContext(), AnnotatorRequestSenderAsync.INDEX_FILE, output + LINE_END);
 			}
 			else if(asyncCode == FaceDetectorAsync.ASYNC_TASK_CODE)
 			{

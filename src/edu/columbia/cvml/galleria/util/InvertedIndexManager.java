@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -61,14 +62,21 @@ public class InvertedIndexManager {
 				{
 					Log.d(LOG_TAG," in addImageEntry : found - " +fvo.getFeature());
 					int idx = 0;
-					for(FeatureValueObject mapFvo : fvoList)
+					boolean found = false;
+					Iterator<FeatureValueObject> itr = fvoList.iterator();
+					while(itr.hasNext())
 					{
+						FeatureValueObject mapFvo = itr.next();
 						if(fvo.getFeatureValue() > mapFvo.getFeatureValue())
 						{
-							fvoList.add(idx, fvo);
+							found = true;
+							Log.d(LOG_TAG,"In found true");
+							break;							
 						}
 						idx++;
 					}
+					if (found)
+						fvoList.add(idx, fvo);
 				}
 			}
 		}

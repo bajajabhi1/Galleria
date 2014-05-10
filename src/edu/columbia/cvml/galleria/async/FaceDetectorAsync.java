@@ -21,10 +21,11 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 	private int MAX_NO_OF_FACES = 8;
 	private FaceDetector myFaceDetect; 
 	private FaceDetector.Face[] myFace;
-	float myEyesDistance;
+	float myEyesDistance = 0;
+	float myEyesDistance2 = 0;
 	int numberOfFaceDetected;
-	private int DESIREDWIDTH = 480;
-	private int DESIREDHEIGHT = 640;
+	private int DESIREDWIDTH = 380;
+	private int DESIREDHEIGHT = 672;
 	private String LOG_TAG = "FaceDetector";
 
 	public FaceDetectorAsync(AsyncTaskRequestResponse resp, String fileName)
@@ -36,10 +37,20 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 	protected String doInBackground(Bitmap... origBitMap)
 	{
 		String response = "";
-		Bitmap scaledBitmap = ScalingUtility.createScaledBitmap(origBitMap[0], DESIREDWIDTH, DESIREDHEIGHT, ScalingLogic.FIT);
+		Bitmap scaledBitmap = null;
+		int divisor = 8;
+		if(origBitMap[0].getWidth() > origBitMap[0].getHeight())
+		{
+			scaledBitmap = ScalingUtility.createScaledBitmap(origBitMap[0], DESIREDWIDTH, DESIREDHEIGHT, ScalingLogic.FIT);
+			divisor = 12;
+		}
+		else
+		{
+			scaledBitmap = ScalingUtility.createScaledBitmap(origBitMap[0], DESIREDHEIGHT, DESIREDWIDTH, ScalingLogic.FIT);
+		}	
 		Bitmap maskBitmap = Bitmap.createBitmap( scaledBitmap.getWidth(), scaledBitmap.getHeight(), Bitmap.Config.RGB_565 );
-		Log.i(LOG_TAG, "scaledBitmap.getWidth() - " + scaledBitmap.getWidth());
-		Log.i(LOG_TAG, "scaledBitmap.getHeight() - " + scaledBitmap.getHeight());
+		Log.d(LOG_TAG, "scaledBitmap.getWidth() - " + scaledBitmap.getWidth());
+		Log.d(LOG_TAG, "scaledBitmap.getHeight() - " + scaledBitmap.getHeight());
 		Canvas c = new Canvas();
 		c.setBitmap(maskBitmap);
 		Paint p = new Paint();
@@ -49,24 +60,32 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 		myFace = new FaceDetector.Face[MAX_NO_OF_FACES];
 		myFaceDetect = new FaceDetector( maskBitmap.getWidth(), maskBitmap.getHeight(), MAX_NO_OF_FACES);
 		numberOfFaceDetected = myFaceDetect.findFaces(maskBitmap, myFace);
+		Log.i(LOG_TAG, "Faces Detected - " + numberOfFaceDetected);
 		if(numberOfFaceDetected == 0)
 		{
 			response = FaceDetectionConstants.FACE_DETECT_NONE;
 		}
-		else if(numberOfFaceDetected == 1)
+		else if(numberOfFaceDetected == 1 || numberOfFaceDetected == 2)
 		{
 			
 			PointF myMidPoint = new PointF();
 			myFace[0].getMidPoint(myMidPoint);
 			myEyesDistance = myFace[0].eyesDistance();
-			Log.i(LOG_TAG, "myEyesDistance - " + myEyesDistance);
-			if (myEyesDistance > DESIREDWIDTH/5)
+			if (numberOfFaceDetected == 2)
+			{
+				PointF myMidPoint2 = new PointF();
+				myFace[1].getMidPoint(myMidPoint2);
+				myEyesDistance2 = myFace[1].eyesDistance();
+				Log.i(LOG_TAG, "myEyesDistance2 - " + myEyesDistance2);
+			}
+			Log.i(LOG_TAG, "myEyesDistance - " + myEyesDistance);			
+			if (myEyesDistance > scaledBitmap.getWidth()/divisor || myEyesDistance2 > scaledBitmap.getWidth()/divisor)
 			{
 				response = FaceDetectionConstants.FACE_DETECT_SELFIE;
 			}
 			else
 			{
-				response = FaceDetectionConstants.FACE_DETECT_SINGLE;				
+				response = FaceDetectionConstants.FACE_DETECT_SINGLE_DOUBLE;				
 			}
 		}
 		else if(numberOfFaceDetected < 7)

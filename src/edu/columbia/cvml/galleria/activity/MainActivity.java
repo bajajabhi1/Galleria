@@ -44,7 +44,7 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 			public void onClick(View v) {
 				//uploadImage("20130810_155042.jpg");
 				TextView text = (TextView) findViewById(R.id.annotations);
-				text.setText(loadIndexFile());
+				text.setText(loadIndexFile(1));
 			}
 		});
 		
@@ -52,7 +52,9 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 		button.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				//detectFaces();
-				isMyServiceRunning();
+				//isMyServiceRunning();
+				TextView text = (TextView) findViewById(R.id.annotations);
+				text.setText(loadIndexFile(2));
 			}
 		});
 		
@@ -64,20 +66,28 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 		Log.i(LOG_TAG, "Service start called");
 		
 		TextView text = (TextView) findViewById(R.id.annotations);
-		text.setText(loadIndexFile());
+		text.setText(loadIndexFile(1));
 		
 	}
 	
-	private String loadIndexFile()
+	private String loadIndexFile(int whichOne)
 	{
-		InvertedIndexManager annotatorIdxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
-		Map<String,List<FeatureValueObject>> annotoMap = annotatorIdxMapMgr.loadIndex();
+		InvertedIndexManager idxMapMgr = null;
+		if (whichOne == 1)
+		{
+			idxMapMgr = new InvertedIndexManager(getApplicationContext(), AnnotatorRequestSenderAsync.INDEX_FILE);
+		}
+		else
+		{
+			idxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
+		}
+		Map<String,List<FeatureValueObject>> map = idxMapMgr.loadIndex();
 		String ann = "";
-		Set<String> keys = annotoMap.keySet();
+		Set<String> keys = map.keySet();
 		for(String key : keys)
 		{
 			ann = ann + key + "::";
-			List<FeatureValueObject> fvoList = annotoMap.get(key);
+			List<FeatureValueObject> fvoList = map.get(key);
 			for(FeatureValueObject fvo : fvoList)
 			{
 				ann = ann + fvo.toString() + ",";

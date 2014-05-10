@@ -48,19 +48,8 @@ public class AnnotatorRequestSenderAsync extends AsyncTask<InputStream, Void, St
 	protected String doInBackground(InputStream... fileInputStream)
 	{
 		String response = null;
-		try {
-			//ArrayList nameValuePairs = new ArrayList();
-
-			//nameValuePairs.add(new BasicNameValuePair("myfile",image_str[0]));
-			//HttpClient httpclient = new DefaultHttpClient();
-			/*HttpPost httppost = new HttpPost(URL);
-			httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-			HttpResponse response = httpclient.execute(httppost);
-			String the_string_response = convertResponseToString(response);
-			//Toast.makeText(ServerRequestSender.this, "Response " + the_string_response, Toast.LENGTH_LONG).show();
-			return the_string_response;*/
-			//FileInputStream fileInputStream = new FileInputStream(new File(pathToOurFile) );
-			//FileInputStream fileInputStream = new FileInputStream(new File(pathToOurFile) );
+		try
+		{
 			URL url = new URL(URL_SERVER);
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			// Allow Inputs &amp; Outputs.
