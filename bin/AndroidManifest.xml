@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.galleria"
+    package="edu.columbia.cvml.galleria.activity"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -24,11 +24,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".DisplayImageActivity"></activity>
+        <activity android:name="edu.columbia.cvml.galleria.activity.DebugActivity"></activity>
         
         <service android:name="edu.columbia.cvml.galleria.services.ImageDetectorService" 
             android:label="@string/ImageServiceName"
             android:process=":ImageServiceProcess">
-</service> 
+		</service> 
     </application>
 
 </manifest>

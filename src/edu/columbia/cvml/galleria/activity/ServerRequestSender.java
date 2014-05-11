@@ -1,4 +1,4 @@
-package edu.columbia.cvml.galleria.async;
+package edu.columbia.cvml.galleria.activity;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -6,55 +6,56 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class AnnotatorRequestSenderAsync extends AsyncTask<InputStream, Void, String> {
+public class ServerRequestSender extends AsyncTask<InputStream, Void, String> {
 
-	private AsyncTaskRequestResponse delegate=null;
-	public static final String ASYNC_TASK_CODE = "ANNOTATOR";
-	public static final String INDEX_FILE = "ANNOTATOR_INDEX";
-	public static final String ANNOTATIONS_SEPARATOR = ","; 
-	public static final String ANNOTATIONS_VALUE_SEPARATOR = ":";
-	public static final String ANNOTATIONS_FILENAME_SEPARATOR = ":";
-	public static final String TAG_FEATURES = "features";
-	public static final String TAG_VALUE = "value";
-	public static final String TAG_KEY = "key";
-	public static final String TAG_FILENAME_KEY = "filename";
-	public static final int TOP_K = 10;
-	private static final String URL_SERVER = "http://192.168.209.1:8080/upload";
-	//final String URL_SERVER = "http://10.0.2.2:8080/upload";
-	
-	private static final String LOG_TAG =  "AnnotatorRequestSenderAsync";
-	
-	
-	private String imageFileName = null;
+	public ServerRequestResponse delegate=null;
 	InputStream is = null;
 	String result = "";
 	String error_text="";
 	JSONObject j = null;
+	String LOG_TAG =  "ServerRequestSender";
 	String twoHyphens = "--";
 	String boundary ="*****";
 	String lineEnd = "\r\n";
 	int bytesRead, bytesAvailable, bufferSize;
 	byte[] buffer;
 	int maxBufferSize = 1*1024*1024;
-	
-	
-	public AnnotatorRequestSenderAsync(AsyncTaskRequestResponse resp, String fileName)
+	private static final String TAG_FEATURES = "features";
+	private static final String TAG_VALUE = "value";
+	private static final String TAG_KEY = "key";
+	private static final int TOP_K = 10;
+
+	public ServerRequestSender(ServerRequestResponse resp)
 	{
 		this.delegate = resp;
-		this.imageFileName = fileName;
 	}
 
-	protected String doInBackground(InputStream... fileInputStream)
-	{
+	protected String doInBackground(InputStream... fileInputStream) {
+
 		String response = null;
-		try
-		{
-			URL url = new URL(URL_SERVER);
+		try {
+			//ArrayList nameValuePairs = new ArrayList();
+
+			//nameValuePairs.add(new BasicNameValuePair("myfile",image_str[0]));
+			//HttpClient httpclient = new DefaultHttpClient();
+			//final String urlServer = "http://192.168.209.1:8080/upload";
+			final String urlServer = "http://10.0.2.2:8080/upload";
+			/*HttpPost httppost = new HttpPost(URL);
+			httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+			HttpResponse response = httpclient.execute(httppost);
+			String the_string_response = convertResponseToString(response);
+			//Toast.makeText(ServerRequestSender.this, "Response " + the_string_response, Toast.LENGTH_LONG).show();
+			return the_string_response;*/
+			//FileInputStream fileInputStream = new FileInputStream(new File(pathToOurFile) );
+			//FileInputStream fileInputStream = new FileInputStream(new File(pathToOurFile) );
+			URL url = new URL(urlServer);
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			// Allow Inputs &amp; Outputs.
 			connection.setDoInput(true);
@@ -66,7 +67,7 @@ public class AnnotatorRequestSenderAsync extends AsyncTask<InputStream, Void, St
 			connection.setRequestProperty("Content-Type", "multipart/form-data;boundary="+boundary);
 			DataOutputStream outputStream = new DataOutputStream( connection.getOutputStream() );
 			outputStream.writeBytes(twoHyphens + boundary + lineEnd);
-			outputStream.writeBytes("Content-Disposition: form-data; name=\"myfile\";filename=\""+imageFileName+"\"" + lineEnd);
+			outputStream.writeBytes("Content-Disposition: form-data; name=\"myfile\";filename=\"testImage.jpg\"" + lineEnd);
 			outputStream.writeBytes(lineEnd);
 			bytesAvailable = fileInputStream[0].available();
 			bufferSize = Math.min(bytesAvailable, maxBufferSize);
@@ -82,28 +83,48 @@ public class AnnotatorRequestSenderAsync extends AsyncTask<InputStream, Void, St
 			}
 			outputStream.writeBytes(lineEnd);
 			outputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+			// Responses from the server (code and message)
+			//int serverResponseCode = connection.getResponseCode();
+			//String serverResponseMessage = connection.getResponseMessage();
 			connection.getInputStream();
 			response = convertResponseToString(connection.getInputStream());
-			Log.d(LOG_TAG, "http response => " + response);
+			//Log.i(LOG_TAG, "http code "+serverResponseCode);
+			Log.i(LOG_TAG, "http response "+response);
 			fileInputStream[0].close();
 			outputStream.flush();
 			outputStream.close();
-		} 
-		catch(Exception e)
-		{
+		} catch(Exception e){
 			Log.e(LOG_TAG, "Error in http connection "+e.toString());
 			e.printStackTrace();
 		}
 		return response;
 	}
 
-	protected void onPostExecute(String result)
-	{
-		Log.d(LOG_TAG, "Result - "+result);
-		delegate.processFinish(ASYNC_TASK_CODE, result);
+	protected void onPostExecute(String result) {
+		
+		Log.i(LOG_TAG, "Result- "+result);
+		String annotations = "";
+		try
+		{
+			JSONObject jsonObj = new JSONObject(result);
+			// Getting JSON Array node
+			JSONArray featuresJson = jsonObj.getJSONArray(TAG_FEATURES);
+
+			// looping through All Contacts
+			for (int i = 0; i < TOP_K; i++) {
+				JSONObject c = featuresJson.getJSONObject(i);
+				String name = c.getString(TAG_KEY);
+				//String id = c.getString(TAG_VALUE);
+				annotations = annotations + ", " + name;
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		delegate.processFinish(annotations);
 	}
 
-	public String convertResponseToString(InputStream inputStream) throws IllegalStateException, IOException
+	public String convertResponseToString(InputStream inputStream ) throws IllegalStateException, IOException
 	{
 		String res = "";
 		StringBuffer buffer = new StringBuffer();

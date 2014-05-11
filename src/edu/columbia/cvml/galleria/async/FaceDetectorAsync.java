@@ -16,6 +16,8 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 	public static final String ASYNC_TASK_CODE = "FaceDetector";
 	public static final String INDEX_FILE = "FaceDetector_INDEX";
 	public static final String FACEDETECTOR_FILENAME_SEPARATOR = ":";
+	private static final String LOG_TAG = "FaceDetector";
+
 	public AsyncTaskRequestResponse delegate=null;
 	private String imageFileName = null;
 	private int MAX_NO_OF_FACES = 8;
@@ -26,8 +28,7 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 	int numberOfFaceDetected;
 	private int DESIREDWIDTH = 380;
 	private int DESIREDHEIGHT = 672;
-	private String LOG_TAG = "FaceDetector";
-
+	
 	public FaceDetectorAsync(AsyncTaskRequestResponse resp, String fileName)
 	{
 		this.delegate = resp;

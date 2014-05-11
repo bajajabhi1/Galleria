@@ -1,213 +1,158 @@
 package edu.columbia.cvml.galleria.activity;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.File;
+import java.util.Random;
 
+import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.Activity;
-import android.app.ActivityManager;
-import android.app.ActivityManager.RunningServiceInfo;
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.galleria.R;
+import com.origamilabs.library.views.StaggeredGridView;
+import com.origamilabs.library.views.StaggeredGridView.OnItemClickListener;
 
-import edu.columbia.cvml.galleria.VO.FeatureValueObject;
-import edu.columbia.cvml.galleria.async.AnnotatorRequestSenderAsync;
-import edu.columbia.cvml.galleria.async.AsyncTaskRequestResponse;
-import edu.columbia.cvml.galleria.async.FaceDetectorAsync;
-import edu.columbia.cvml.galleria.services.ImageDetectorService;
-import edu.columbia.cvml.galleria.util.InvertedIndexManager;
-
-public class MainActivity extends Activity implements AsyncTaskRequestResponse {
-
+/**
+ * 
+ * This will not work so great since the heights of the imageViews 
+ * are calculated on the iamgeLoader callback ruining the offsets. To fix this try to get 
+ * the (intrinsic) image width and height and set the views height manually. I will
+ * look into a fix once I find extra time.
+ * 
+ * @author Maurycy Wojtowicz
+ *
+ */
+@SuppressLint("NewApi")
+public class MainActivity extends Activity {
 	String LOG_TAG =  "MainActivity";
+
+	/**
+	 * This will not work so great since the heights of the imageViews 
+	 * are calculated on the iamgeLoader callback ruining the offsets. To fix this try to get 
+	 * the (intrinsic) image width and height and set the views height manually. I will
+	 * look into a fix once I find extra time.
+	 */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		Button button = (Button) findViewById(R.id.upload);
-		button.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				//uploadImage("20130810_155042.jpg");
-				TextView text = (TextView) findViewById(R.id.annotations);
-				text.setText(loadIndexFile(1));
-			}
-		});
-		
-		button = (Button) findViewById(R.id.detectFace);
-		button.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				//detectFaces();
-				//isMyServiceRunning();
-				TextView text = (TextView) findViewById(R.id.annotations);
-				text.setText(loadIndexFile(2));
-			}
-		});
-		
-		// use this to start and trigger a service
-		Intent i= new Intent(getApplicationContext(), ImageDetectorService.class);
-		// potentially add data to the intent
-		i.putExtra("KEY1", "Value to be used by the service");
-		getApplicationContext().startService(i);
-		Log.i(LOG_TAG, "Service start called");
-		
-		TextView text = (TextView) findViewById(R.id.annotations);
-		text.setText(loadIndexFile(1));
-		
-	}
+
+		ActionBar actionbar = getActionBar();
+		actionbar.setTitle("Galleria");
+		actionbar.setSubtitle("When you love clicking!!!");
+		actionbar.setHomeButtonEnabled(true);
+		StaggeredGridView gridView = (StaggeredGridView) this.findViewById(R.id.staggeredGridView1);
+
+		int margin = getResources().getDimensionPixelSize(R.dimen.margin);
+
+
+		//StaggeredAdapter adapter = new StaggeredAdapter(MainActivity.this, R.id.imageView1, urls);
+
+		gridView.setItemMargin(margin); // set the GridView margin
+		gridView.setPadding(margin, 0, margin, 0); // have the margin on the sides as well 
+
+
+		//String ExternalStorageDirectoryPath = Environment.getDataDirectory().getAbsolutePath();
 	
-	private String loadIndexFile(int whichOne)
-	{
-		InvertedIndexManager idxMapMgr = null;
-		if (whichOne == 1)
+		Uri extUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+		
+		String[] projection = new String[] { MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.Images.Media.DATA,
+				MediaStore.MediaColumns.DATE_ADDED, MediaStore.MediaColumns._ID };
+		Cursor cursor = MediaStore.Images.Media.query(getContentResolver(), extUri, projection, null, MediaStore.MediaColumns.DATE_ADDED + " asc");
+		String[] imagePath = new String[cursor.getCount()];
+		int index = 0;
+		while (cursor.moveToNext()) 
 		{
-			idxMapMgr = new InvertedIndexManager(getApplicationContext(), AnnotatorRequestSenderAsync.INDEX_FILE);
+			imagePath[index] = cursor.getString(cursor.getColumnIndex(MediaStore.MediaColumns.DATA));
+			Log.d(LOG_TAG, "Image = " + imagePath[index]);
+			index +=1;
 		}
-		else
-		{
-			idxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
-		}
-		Map<String,List<FeatureValueObject>> map = idxMapMgr.loadIndex();
-		String ann = "";
-		Set<String> keys = map.keySet();
-		for(String key : keys)
-		{
-			ann = ann + key + "::";
-			List<FeatureValueObject> fvoList = map.get(key);
-			for(FeatureValueObject fvo : fvoList)
-			{
-				ann = ann + fvo.toString() + ",";
+		cursor.close();
+
+		/*String targetPath = ExternalStorageDirectoryPath + "/DCIM/Camera/";
+
+		Toast.makeText(getApplicationContext(), targetPath, Toast.LENGTH_LONG).show();
+		File targetDirector = new File(targetPath);
+		File[] files = targetDirector.listFiles();
+		shuffleArray(files);
+		String[] uri = new String[files.length];
+		int index =0;
+
+		for (File file: files)
+		{		
+			uri[index] = file.getAbsolutePath();
+			index +=1;
+		}*/
+
+		CustomStaggeredAdapter adapter = new CustomStaggeredAdapter(MainActivity.this, R.id.imageView1, imagePath);
+		gridView.setAdapter(adapter);
+
+		//Intent i = new Intent(this, DisplayImageActivity.class);
+		gridView.setOnItemClickListener(new OnItemClickListener() {            	  
+			@Override
+			public void onItemClick(StaggeredGridView parent, View view,
+					int position, long id) {
+				Toast.makeText(getApplicationContext(), "You clicked it, yay", Toast.LENGTH_LONG).show();
+
+				Intent i = new Intent(MainActivity.this, DisplayImageActivity.class);
+				String filepath = (String) parent.getAdapter().getItem(position);
+				i.putExtra("filepath", filepath);
+				startActivity(i);
 			}
-			ann = ann + "+++\n";
-		}
-		return ann;
-	}
-	
-	private void isMyServiceRunning() {
-	    ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-	    for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-	    	Log.i(LOG_TAG, "Service running - "  + service.service.getClassName());
-	    	if (ImageDetectorService.class.getName().equals(service.service.getClassName())) {
-	        	Log.i(LOG_TAG, "Service found to be running");
-				Toast.makeText(MainActivity.this,"Service is running", Toast.LENGTH_LONG).show();
-	        }
-	    }
-	}
 
-	private void detectFaces()
-	{
-		 //doFaceDetection("20130810_155042.jpg");
-		 /*try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		 /*doFaceDetection("20140412_163630.jpg");
-		 try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		 doFaceDetection("20140412_164945.jpg");
-		 try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}*/
-		 //doFaceDetection("WP_20131212_007.png");
-		FaceDetectorView view = (FaceDetectorView) findViewById(R.id.faceDetbox);
-		view.getLayoutParams().height = 640;
-		view.getLayoutParams().width = 480;
-		view.doFaceDetection("IMG_20140503_191136.jpg");
-	}
-	
-	private void uploadImage(String img_name)
-	{
-		AssetManager assetManager = getAssets();
-		try {
-			InputStream inpStream = assetManager.open(img_name);
-			Log.i(LOG_TAG, "image path - ");
-			TextView text = (TextView) findViewById(R.id.annotations);
-			Toast.makeText(MainActivity.this,"Annotating in progress... Please wait...", Toast.LENGTH_LONG).show();
-			text.setText("Annotating in progress... Please wait...");
-			new AnnotatorRequestSenderAsync(this,img_name).execute(inpStream);
-			inpStream = assetManager.open(img_name);
-			Bitmap bitmap = BitmapFactory.decodeStream(inpStream);
-			ImageView first = (ImageView) findViewById(R.id.imagebox);
-			first.setImageBitmap(bitmap);
+		}); 
 
-			//File file = new File(imageList[0],"imagefile.jpg");
-			//if(file.exists())
-			//{
-			/*ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		adapter.notifyDataSetChanged();
 
-				// Enclose this in a scope so that when it's over we can call the garbage collector (the phone doesn't have a lot of memory!)
-				{
-					Bitmap image = BitmapFactory.decodeStream(inpStream);
-					Bitmap scaled = Bitmap.createScaledBitmap(image, (int)(image.getWidth() * 0.3), (int)(image.getHeight() * 0.3), false);
-					scaled.compress(Bitmap.CompressFormat.JPEG, 90, stream);
-				}
 
-				System.gc();
 
-				byte [] byte_arr = stream.toByteArray();
-				String image_str = Base64.encodeToString(byte_arr,Base64.DEFAULT);
-				Log.i(LOG_TAG, "image string - " + image_str);*/
-			/*ArrayList nameValuePairs = new ArrayList();
 
-				nameValuePairs.add(new BasicNameValuePair("upfile",image_str));
-
-				try {
-					HttpClient httpclient = new DefaultHttpClient();
-					final String URL = "http://127.0.0.1:8080";
-					HttpPost httppost = new HttpPost(URL);
-					httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-					HttpResponse response = httpclient.execute(httppost);
-					String the_string_response = convertResponseToString(response);
-					Toast.makeText(MainActivity.this, "Response " + the_string_response, Toast.LENGTH_LONG).show();
-				} catch(Exception e){
-					Toast.makeText(MainActivity
-							.this, "ERROR " + e.getMessage(), Toast.LENGTH_LONG).show();
-					Log.i(LOG_TAG, "Error in http connection "+e.toString());
-					e.printStackTrace();
-				}*/
-			//}
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
+		gridView.setAdapter(adapter);
+		adapter.notifyDataSetChanged();
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
+		getMenuInflater().inflate(R.menu.activity_main, menu);
 		return true;
 	}
 
 	@Override
-	public void processFinish(String asyncCode, String output) {
-		// TODO Auto-generated method stub
-		TextView text = (TextView) findViewById(R.id.annotations);
-		text.setText(output);
-	}
+	public boolean onOptionsItemSelected(MenuItem item)
+	{         
+		switch (item.getItemId())
+		{
+		case R.id.DebugScreen:
+			Toast.makeText(MainActivity.this, "DebugScreen is selected", Toast.LENGTH_SHORT).show();
+			Intent intent = new Intent(MainActivity.this, DebugActivity.class);
+            startActivity(intent);
+			return true;
 
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}    
+
+	private void shuffleArray(Object[] array)
+	{
+		int index; 
+		Object temp;
+		Random random = new Random();
+		for (int i = array.length - 1; i > 0; i--)
+		{
+			index = random.nextInt(i + 1);
+			temp = array[index];
+			array[index] = array[i];
+			array[i] = temp;
+		}
+	}
 }

@@ -5,15 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.app.Service;
 import android.content.Intent;
@@ -32,6 +27,8 @@ import edu.columbia.cvml.galleria.VO.FeatureValueObject;
 import edu.columbia.cvml.galleria.async.AnnotatorRequestSenderAsync;
 import edu.columbia.cvml.galleria.async.AsyncTaskRequestResponse;
 import edu.columbia.cvml.galleria.async.FaceDetectorAsync;
+import edu.columbia.cvml.galleria.util.ClusterFeatureManager;
+import edu.columbia.cvml.galleria.util.FeatureJSONParser;
 import edu.columbia.cvml.galleria.util.InvertedIndexManager;
 import edu.columbia.cvml.galleria.util.ScalingUtility;
 import edu.columbia.cvml.galleria.util.ScalingUtility.ScalingLogic;
@@ -47,7 +44,7 @@ public class ImageDetectorService extends Service
 	
 	private InvertedIndexManager annotatorIdxMapMgr = null;
 	private InvertedIndexManager faceDetectorIdxMapMgr = null;
-
+	private ClusterFeatureManager featureMgr = null;
 	private int lastImageTime = 0;
 
 	@Override
@@ -73,23 +70,22 @@ public class ImageDetectorService extends Service
 		// Restore preferences
 		SharedPreferences settings = getSharedPreferences(PREFS_FILE_NAME, MODE_PRIVATE);
 		String default_time = System.currentTimeMillis() +"";
-		Calendar c = Calendar.getInstance();
-		c.setTimeInMillis(System.currentTimeMillis());
 		Log.i(LOG_TAG, "Time Stamp current: - " + System.currentTimeMillis());
-		Log.i(LOG_TAG, "Time Stamp current: - " + c.getTime().toString());
 		
 		default_time = default_time.substring(0, default_time.length()-3);
 		int def_time = Integer.parseInt(default_time);
 		lastImageTime = settings.getInt(PREFS_NAME_LAST_IMAGE_TIME, def_time);
-		Long t = def_time * 1000l;
-		c = Calendar.getInstance();
-		c.setTimeInMillis(t);
-		Log.i(LOG_TAG, "lastImageTime: - " + System.currentTimeMillis());
-		Log.i(LOG_TAG, "lastImageTime: - " + c.getTime().toString());
-
-		annotatorIdxMapMgr = new InvertedIndexManager(getApplicationContext(), AnnotatorRequestSenderAsync.INDEX_FILE);
-		faceDetectorIdxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
+		
 		Log.d(LOG_TAG, "loaded preference file, lastImageTime - " + lastImageTime);
+
+		// Initialize all the file managers and load the initial files into cache
+		annotatorIdxMapMgr = new InvertedIndexManager(getApplicationContext(), AnnotatorRequestSenderAsync.INDEX_FILE);
+		annotatorIdxMapMgr.loadIndex();
+		faceDetectorIdxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
+		faceDetectorIdxMapMgr.loadIndex();
+		featureMgr = new ClusterFeatureManager(getApplicationContext());
+		featureMgr.loadImageFeatureMap();
+
 		ImageObserver observer = new ImageObserver(new Handler(),lastImageTime);
 
 		Log.d(LOG_TAG, "beforer registering content observer");
@@ -113,6 +109,8 @@ public class ImageDetectorService extends Service
 
 		public static final String LOG_TAG = "ImageObserver";
 		private int lastImageTime = 0;
+		private boolean isProcessingSuccess = false;
+		private Set<String> lastProcessed = new LinkedHashSet<String>();
 
 		public ImageObserver(Handler handler, int lastImageTime)
 		{
@@ -128,14 +126,17 @@ public class ImageDetectorService extends Service
 
 			// process the new image
 			processNewImage();
+			Log.d(LOG_TAG, "Finished processing new images");
 			// update the lastImageTime
-			SharedPreferences settings = getSharedPreferences(PREFS_FILE_NAME, 0);
-			// TODO
-			// Write the HASH MAP to inverted index file
-			SharedPreferences.Editor editor = settings.edit();
-			editor.putInt(PREFS_NAME_LAST_IMAGE_TIME, lastImageTime);
-			// Commit the edits!
-			editor.commit();
+			if(isProcessingSuccess)
+			{
+				SharedPreferences settings = getSharedPreferences(PREFS_FILE_NAME, 0);
+				SharedPreferences.Editor editor = settings.edit();
+				editor.putInt(PREFS_NAME_LAST_IMAGE_TIME, lastImageTime);
+				// Commit the edits!
+				editor.commit();
+				Log.d(LOG_TAG, "Last Image Time updated");
+			}
 		}
 
 		private void processNewImage()
@@ -160,6 +161,11 @@ public class ImageDetectorService extends Service
 					Log.d(LOG_TAG, "Found again" + displayName+"-");
 					continue;
 				}
+				if(lastProcessed.contains(displayName)) // Skip this image if already processed last trigger
+				{
+					Log.d(LOG_TAG, "Found in last processed" + displayName+"-");
+					continue;
+				}
 				
 				currImgSet.add(displayName);
 				int dateCreated = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns.DATE_ADDED));
@@ -180,6 +186,8 @@ public class ImageDetectorService extends Service
 				Log.d(LOG_TAG, "Processing - " + displayName + "," + dateCreated);
 				lastImageTime = dateCreated;
 			}
+			lastProcessed.clear();
+			lastProcessed.addAll(currImgSet);
 			cursor.close();
 			Log.d(LOG_TAG, listOfImage);
 		}
@@ -208,55 +216,38 @@ public class ImageDetectorService extends Service
 
 		@Override
 		public void processFinish(String asyncCode, String output)
-		{			
-			if(asyncCode == AnnotatorRequestSenderAsync.ASYNC_TASK_CODE)
+		{		
+			if (output!=null)
 			{
-				Log.d(LOG_TAG, "Processing Annotator Finished");
-				Toast.makeText(getApplicationContext(), "Got the annotations - " + output, Toast.LENGTH_LONG).show();
-				List<FeatureValueObject> features = getFeatureList(output);
-				annotatorIdxMapMgr.addImageEntry(features);
-				annotatorIdxMapMgr.writeIndex();
-			}
-			else if(asyncCode == FaceDetectorAsync.ASYNC_TASK_CODE)
-			{
-				Log.d(LOG_TAG, "Processing Face Detection Finished");
-				Toast.makeText(getApplicationContext(), "Faces Detected - " + output, Toast.LENGTH_LONG).show();
-				Log.d(LOG_TAG, "Faces Detected - " + output);
-				String fileName = output.substring(0,output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR)+1);
-				String faces = output.substring(output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR)+1);
-				FeatureValueObject fvo = new FeatureValueObject(fileName, faces, 1f);
-				faceDetectorIdxMapMgr.addSingleFeatureEntry(fvo);
-				faceDetectorIdxMapMgr.writeIndex();
-			}
-		}
-		
-		public List<FeatureValueObject> getFeatureList(String json)
-		{
-			List<FeatureValueObject> featureList = new ArrayList<FeatureValueObject>();
-
-			try
-			{
-				FeatureValueObject fvobj = null;
-				JSONObject jsonObj = new JSONObject(json);
-				String imageName = jsonObj.getString(AnnotatorRequestSenderAsync.TAG_FILENAME_KEY);
-				// Getting JSON Array node
-				JSONArray featuresJson = jsonObj.getJSONArray(AnnotatorRequestSenderAsync.TAG_FEATURES);
-
-				// looping through All Contacts
-				for (int i = 0; i < AnnotatorRequestSenderAsync.TOP_K; i++) {
-					JSONObject c = featuresJson.getJSONObject(i);
-					String featureName = c.getString(AnnotatorRequestSenderAsync.TAG_KEY);
-					String featureValue = c.getString(AnnotatorRequestSenderAsync.TAG_VALUE);
-					Float featureFloatValue = Float.valueOf(featureValue);
-					fvobj = new FeatureValueObject(imageName, featureName, featureFloatValue);
-					featureList.add(fvobj);
+				if(asyncCode == AnnotatorRequestSenderAsync.ASYNC_TASK_CODE)
+				{
+					Log.d(LOG_TAG, "Processing Annotator Finished");
+					Toast.makeText(getApplicationContext(), "Got the annotations - " + output, Toast.LENGTH_LONG).show();
+					List<FeatureValueObject> features = FeatureJSONParser.getFeatureList(output);
+					annotatorIdxMapMgr.addImageEntry(features);
+					annotatorIdxMapMgr.writeIndex();
+					featureMgr.addImageEntry(FeatureJSONParser.getImageName(output), 
+							FeatureJSONParser.getClusterFeatureString(output));
+					featureMgr.writeImageFeatureMap();
 				}
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				Log.e(LOG_TAG, e.getMessage());
-				e.printStackTrace();
+				else if(asyncCode == FaceDetectorAsync.ASYNC_TASK_CODE)
+				{
+					Log.d(LOG_TAG, "Processing Face Detection Finished");
+					Toast.makeText(getApplicationContext(), "Faces Detected - " + output, Toast.LENGTH_LONG).show();
+					Log.d(LOG_TAG, "Faces Detected - " + output);
+					String fileName = output.substring(0,output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR)+1);
+					String faces = output.substring(output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR)+1);
+					FeatureValueObject fvo = new FeatureValueObject(fileName, faces, 1f);
+					faceDetectorIdxMapMgr.addSingleFeatureEntry(fvo);
+					faceDetectorIdxMapMgr.writeIndex();
+				}
+				isProcessingSuccess  = true;
 			}
-			return featureList;
+			else
+			{
+				Log.e(LOG_TAG,"Output received null from async call");
+				isProcessingSuccess  = false;
+			}
 		}
 	}
 }
