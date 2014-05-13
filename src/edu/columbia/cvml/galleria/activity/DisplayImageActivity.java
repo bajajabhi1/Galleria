@@ -6,6 +6,7 @@ import java.io.InputStream;
 
 import org.apache.http.HttpResponse;
 
+import edu.columbia.cvml.galleria.util.BitMapDecoder;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -34,6 +35,8 @@ public class DisplayImageActivity extends Activity implements ServerRequestRespo
 	private LinearLayout mLayout;
 	private String LOG_TAG = "DisplayImageActivity";
 	private boolean clickedBefore = false;
+	public static final int ANNO_DESIREDWIDTH = 640;
+	public static final int ANNO_DESIREDHEIGHT = 480;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {         
@@ -43,7 +46,8 @@ public class DisplayImageActivity extends Activity implements ServerRequestRespo
 		Intent i = getIntent();
 		
 		filepath = i.getStringExtra("filepath");
-		Bitmap bitmap = BitmapFactory.decodeFile(filepath);
+		Bitmap bitmap = BitMapDecoder.decodeSampledBitmap(filepath, ANNO_DESIREDHEIGHT, ANNO_DESIREDWIDTH);
+		//Bitmap bitmap = BitmapFactory.decodeFile(filepath);
 
 		ImageView img = new ImageView(this);
 		img.setImageBitmap(bitmap);

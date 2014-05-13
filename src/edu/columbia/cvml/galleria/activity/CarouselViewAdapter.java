@@ -30,10 +30,6 @@ package edu.columbia.cvml.galleria.activity;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.columbia.cvml.galleria.carousel.CarouselDataItem;
-import edu.columbia.cvml.galleria.carousel.CarouselViewItem;
-import edu.columbia.cvml.galleria.util.ScalingUtility;
-import edu.columbia.cvml.galleria.util.ScalingUtility.ScalingLogic;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -49,6 +45,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Filter;
+import edu.columbia.cvml.galleria.carousel.CarouselDataItem;
+import edu.columbia.cvml.galleria.carousel.CarouselViewItem;
+import edu.columbia.cvml.galleria.util.BitMapDecoder;
 
 public class CarouselViewAdapter extends BaseAdapter {
 	int mGalleryItemBackground;
@@ -148,15 +147,17 @@ public class CarouselViewAdapter extends BaseAdapter {
 			position = position % mDocus.size(); 
 		} 
 
-		Bitmap originalImage = BitmapFactory.decodeFile(mDocus.get(position).getImgPath());
-		if(originalImage.getWidth() > originalImage.getHeight())
+		//Bitmap originalImage = BitmapFactory.decodeFile(mDocus.get(position).getImgPath());
+		Bitmap originalImage = BitMapDecoder.decodeSampledBitmap(mDocus.get(position).getImgPath(),
+				ANNO_DESIREDHEIGHT, ANNO_DESIREDWIDTH);
+		/*if(originalImage.getWidth() > originalImage.getHeight())
 		{
 			originalImage = ScalingUtility.createScaledBitmap(originalImage, ANNO_DESIREDWIDTH, ANNO_DESIREDHEIGHT, ScalingLogic.FIT);
 		}
 		else
 		{
 			originalImage = ScalingUtility.createScaledBitmap(originalImage, ANNO_DESIREDHEIGHT, ANNO_DESIREDWIDTH, ScalingLogic.FIT);
-		}
+		}*/
 		Bitmap reflection = createReflectedImage(originalImage);
 		if (originalImage != null)
 			originalImage.recycle();

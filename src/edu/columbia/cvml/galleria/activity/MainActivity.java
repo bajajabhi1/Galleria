@@ -31,7 +31,7 @@ import com.origamilabs.library.views.StaggeredGridView.OnItemClickListener;
  * the (intrinsic) image width and height and set the views height manually. I will
  * look into a fix once I find extra time.
  * 
- * @author Maurycy Wojtowicz
+ * @author Maurycy Wojtowicz, Abhinav Bajaj
  *
  */
 @SuppressLint("NewApi")
@@ -61,25 +61,6 @@ public class MainActivity extends Activity {
 		gridView.setItemMargin(margin); // set the GridView margin
 		gridView.setPadding(margin, 0, margin, 0); // have the margin on the sides as well 
 
-
-		/*Uri extUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-		//Uri extUri = MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI;
-		String[] projection = new String[] { MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.Images.Media.DATA,
-				MediaStore.MediaColumns.DATE_ADDED, MediaStore.MediaColumns._ID };
-		//String[] projection = new String[] {MediaStore.Images.Thumbnails.DATA,MediaStore.MediaColumns._ID };
-		Cursor cursor = MediaStore.Images.Media.query(getContentResolver(), extUri, projection, null, MediaStore.MediaColumns.DATE_ADDED + " asc");
-		//Cursor cursor = MediaStore.Images.Thumbnails.queryMiniThumbnails(getContentResolver(), extUri, MediaStore.Images.Thumbnails.MICRO_KIND, projection);
-		final String[] imagePath = new String[cursor.getCount()];
-		final ArrayList<String> imagePathList = new ArrayList<String>();
-		int index = 0;
-		while (cursor.moveToNext()) 
-		{
-			imagePath[index] = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-			imagePathList.add(imagePath[index]);
-			Log.d(LOG_TAG, "Image = " + imagePath[index]);
-			index +=1;
-		}
-		cursor.close();*/
 		final Map<String,ArrayList<String>> clusterMap = simulateClusterMethod();
 		final Map<Integer,String> posClusterMap = new HashMap<Integer,String>();
 		Set<String> clusterNameSet = clusterMap.keySet();
@@ -106,6 +87,7 @@ public class MainActivity extends Activity {
 				//String filepath = (String) parent.getAdapter().getItem(position);
 				String cluster = posClusterMap.get(position);
 				i.putStringArrayListExtra("filepath", clusterMap.get(cluster));
+				System.gc();
 				startActivity(i);
 			}
 		}); 
