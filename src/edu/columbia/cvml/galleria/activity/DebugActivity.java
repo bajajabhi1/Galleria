@@ -53,10 +53,10 @@ public class DebugActivity extends Activity implements AsyncTaskRequestResponse 
 		button.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				//detectFaces();
-				//isMyServiceRunning();
-				TextView text = (TextView) findViewById(R.id.annotations);
+				isMyServiceRunning();
+				/*TextView text = (TextView) findViewById(R.id.annotations);
 				text.setMovementMethod(new ScrollingMovementMethod());
-				text.setText(loadIndexFile(2));
+				text.setText(loadIndexFile(2));*/
 			}
 		});
 		

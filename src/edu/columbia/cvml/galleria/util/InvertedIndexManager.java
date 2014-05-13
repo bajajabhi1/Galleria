@@ -131,8 +131,8 @@ public class InvertedIndexManager {
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			//Log.e(LOG_TAG,e.getMessage());
-			e.printStackTrace();
+			Log.e(LOG_TAG,e.getMessage());
+			//e.printStackTrace();
 		}
 		finally
 		{
@@ -158,15 +158,11 @@ public class InvertedIndexManager {
 			outStream.flush();
 			outStream.close();
 			Log.d(LOG_TAG,"Index written to file");
-		} 
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}  
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			Log.e(LOG_TAG,e.getMessage());
+			//e.printStackTrace();
+		}
 		finally
 		{
 			if(outStream!=null)

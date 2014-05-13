@@ -116,13 +116,13 @@ public class MainActivity extends Activity {
 		}
 		Log.d(LOG_TAG, "size = " + index);
 		ArrayList<String> cluster1List = new ArrayList<String>();
-		for(int i = 0;i<4 && i<index-1;i++)
+		for(int i = 0;i<4 && i<index;i++)
 		{
 			cluster1List.add(imagePathList.get(i));			
 		}
 		clusterMap.put("Cluster1",cluster1List);
 		ArrayList<String> cluster2List = new ArrayList<String>();
-		for(int i = 4;i<8 && i<index-1;i++)
+		for(int i = 4;i<8 && i<index;i++)
 		{
 			cluster2List.add(imagePathList.get(i));			
 		}
