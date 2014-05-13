@@ -75,7 +75,7 @@ public class ClusterFeatureManager
 				Log.d(LOG_TAG,key + " => " + featureLineImageMap.get(key));
 			}
 		} catch (Exception e) {
-			Log.e(LOG_TAG,e.getMessage());
+			//Log.e(LOG_TAG,e.getMessage());
 			e.printStackTrace();
 		}
 		finally
@@ -107,7 +107,7 @@ public class ClusterFeatureManager
 			}
 		} catch (Exception e) {
 			Log.e(LOG_TAG,e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		finally
 		{
@@ -204,7 +204,8 @@ public class ClusterFeatureManager
 				Log.d(LOG_TAG,key + " => " + indexMap.get(key));
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
+			Log.e(LOG_TAG,e.getMessage());
 		}
 		finally
 		{

@@ -41,6 +41,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Shader.TileMode;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -55,6 +56,7 @@ public class CarouselViewAdapter extends BaseAdapter {
 	private static final int ANNO_DESIREDWIDTH = 480;
 	private static final int ANNO_DESIREDHEIGHT = 320;
 	private List<CarouselDataItem> mDocus, mDocusOrig;
+	private static final String LOG_TAG = "CarouselViewAdapter";
 	int m_w, m_h;
 
 	public CarouselViewAdapter(Context c, List<CarouselDataItem> docuList, int image_max_w, int image_max_h) {
@@ -142,10 +144,11 @@ public class CarouselViewAdapter extends BaseAdapter {
 			CarouselViewItem scaIv = new CarouselViewItem(mContext, reflection, "empty doc", m_w, m_h);
 			return scaIv; //fix divide by zero on filtering
 		}
+		Log.d(LOG_TAG, "position  - " + position);
 		// we got content
 		if (position >= mDocus.size()) { 
 			position = position % mDocus.size(); 
-		} 
+		}
 
 		//Bitmap originalImage = BitmapFactory.decodeFile(mDocus.get(position).getImgPath());
 		Bitmap originalImage = BitMapDecoder.decodeSampledBitmap(mDocus.get(position).getImgPath(),

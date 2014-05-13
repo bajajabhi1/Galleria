@@ -2,7 +2,6 @@ package edu.columbia.cvml.galleria.activity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -68,7 +67,8 @@ public class MainActivity extends Activity {
 		int index = 0;
 		for(String cluster : clusterNameSet)
 		{
-			imagePath[index] = clusterMap.get(cluster).get(0);
+			if(!clusterMap.get(cluster).isEmpty())
+				imagePath[index] = clusterMap.get(cluster).get(0);
 			posClusterMap.put(index, cluster);
 			index +=1;
 		}
@@ -111,18 +111,18 @@ public class MainActivity extends Activity {
 		{
 			imagePath[index] = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
 			imagePathList.add(imagePath[index]);
-			Log.d(LOG_TAG, "Image = " + imagePath[index]);
+			//Log.d(LOG_TAG, "Image = " + imagePath[index]);
 			index +=1;
 		}
 		Log.d(LOG_TAG, "size = " + index);
 		ArrayList<String> cluster1List = new ArrayList<String>();
-		for(int i = 0;i<4;i++)
+		for(int i = 0;i<4 && i<index-1;i++)
 		{
 			cluster1List.add(imagePathList.get(i));			
 		}
 		clusterMap.put("Cluster1",cluster1List);
 		ArrayList<String> cluster2List = new ArrayList<String>();
-		for(int i = 4;i<8;i++)
+		for(int i = 4;i<8 && i<index-1;i++)
 		{
 			cluster2List.add(imagePathList.get(i));			
 		}
@@ -144,7 +144,7 @@ public class MainActivity extends Activity {
 		{
 		case R.id.DebugScreen:
 			Toast.makeText(MainActivity.this, "DebugScreen is selected", Toast.LENGTH_SHORT).show();
-			Intent intent = new Intent(MainActivity.this, CarouselActivity.class);
+			Intent intent = new Intent(MainActivity.this, DebugActivity.class);
 			startActivity(intent);
 			return true;
 
