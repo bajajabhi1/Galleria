@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -14,10 +15,13 @@ import android.util.Log;
 public class ClusterFeatureManager 
 {
 	Context ctx = null;
-	private static final String FEATURE_FILE = "clustering_file";
+	private static final String FEATURE_FILE_CSV = "clustering_file_csv";
+	private static final String FEATURELINE_IMAGE_MAP_FILE = "feature_image_map";
 	private static final String IMAGE_FEATURE_MAP_FILE = "image_feature_map";
+	private static final String CLUSTER_IMAGE_MAP_FILE = "cluster_image_map";
 	private static final String LOG_TAG = "ClusterFeatureManager";
-	private Map<String,Integer> imageFeatureMap = new HashMap<String,Integer>();
+	private Map<Integer,String> featureLineImageMap = new HashMap<Integer,String>();
+	private Map<String,String> imageFeatureMap = new HashMap<String,String>();
 	public static final char FEATURE_SEPARATOR = ','; 
 	
 	int lineCounter = 0;
@@ -31,37 +35,70 @@ public class ClusterFeatureManager
 	public void init()
 	{
 		// Initialize the file only if there is no existing
-		if (null == FileOperation.readFileFromInternalStorage(ctx, FEATURE_FILE))
+		if (null == FileOperation.readFileFromInternalStorage(ctx, FEATURE_FILE_CSV))
 		{
-			FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE, HEADING + "\n");
+			FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE_CSV, HEADING + "\n");
 			lineCounter = 0;
 			Log.d(LOG_TAG,"Initialized new feature file");
 		}
 	}
 
 	/**
-	 *  Input is image file name and the string of annotations separated by separator
+	 *  Input is image file name and the string of features separated by separator
 	 */
-	public void addImageEntry(String imageName, String features)
+	public void addImageEntry(String imageName, String featureValues, String topK_featureStr)
 	{
 		Log.d(LOG_TAG," in addImageEntry");
 		lineCounter++;
-		imageFeatureMap.put(imageName,lineCounter);
-		FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE, features + "\n");
+		featureLineImageMap.put(lineCounter,imageName);
+		// Put Top K feature in this map
+		imageFeatureMap.put(imageName, topK_featureStr);
+		FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE_CSV, featureValues + "\n");
 	}
 	
 	public String loadClusterImageFile()
 	{
-		return FileOperation.readFileFromInternalStorage(ctx, FEATURE_FILE);
+		return FileOperation.readFileFromInternalStorage(ctx, FEATURE_FILE_CSV);
 	}
 
-	public Map<String,Integer> loadImageFeatureMap()
+	public Map<Integer,String> loadFeatureLineImageMap()
+	{
+		ObjectInputStream inputStream = null;
+		try
+		{
+			inputStream = new ObjectInputStream(ctx.openFileInput(FEATURELINE_IMAGE_MAP_FILE));
+			featureLineImageMap = (HashMap<Integer,String>)inputStream.readObject();         
+			Log.d(LOG_TAG,"Reading from the file");
+			Set<Integer> keys = featureLineImageMap.keySet();
+			for(Integer key : keys)
+			{
+				Log.d(LOG_TAG,key + " => " + featureLineImageMap.get(key));
+			}
+		} catch (Exception e) {
+			Log.e(LOG_TAG,e.getMessage());
+			e.printStackTrace();
+		}
+		finally
+		{
+			if(inputStream!=null)
+			{
+				try {
+					inputStream.close();
+				} catch (IOException e) {
+					//ignore
+				}
+			}
+		}
+		return featureLineImageMap;
+	}
+	
+	public Map<String,String> loadImageFeatureMap()
 	{
 		ObjectInputStream inputStream = null;
 		try
 		{
 			inputStream = new ObjectInputStream(ctx.openFileInput(IMAGE_FEATURE_MAP_FILE));
-			imageFeatureMap = (HashMap<String,Integer>)inputStream.readObject();         
+			imageFeatureMap = (HashMap<String,String>)inputStream.readObject();         
 			Log.d(LOG_TAG,"Reading from the file");
 			Set<String> keys = imageFeatureMap.keySet();
 			for(String key : keys)
@@ -86,13 +123,13 @@ public class ClusterFeatureManager
 		return imageFeatureMap;
 	}
 
-	public void writeImageFeatureMap()
+	public void writeFeatureLineImageMap()
 	{
 		ObjectOutputStream outStream = null;
 		try
 		{
-			outStream = new ObjectOutputStream(ctx.openFileOutput(IMAGE_FEATURE_MAP_FILE,Context.MODE_PRIVATE));
-			outStream.writeObject(imageFeatureMap);
+			outStream = new ObjectOutputStream(ctx.openFileOutput(FEATURELINE_IMAGE_MAP_FILE,Context.MODE_PRIVATE));
+			outStream.writeObject(featureLineImageMap);
 			outStream.flush();
 			outStream.close();
 			Log.d(LOG_TAG,"Index written to file");
@@ -119,6 +156,102 @@ public class ClusterFeatureManager
 
 	}
 	
+	public void writeImageFeatureMap()
+	{
+		ObjectOutputStream outStream = null;
+		try
+		{
+			outStream = new ObjectOutputStream(ctx.openFileOutput(IMAGE_FEATURE_MAP_FILE,Context.MODE_PRIVATE));
+			outStream.writeObject(imageFeatureMap);
+			outStream.flush();
+			outStream.close();
+			Log.d(LOG_TAG,"image features map loaded from file");
+		} 
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace();
+		} 
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}  
+		finally
+		{
+			if(outStream!=null)
+			{
+				try {
+					outStream.close();
+				} catch (IOException e) {
+					//ignore
+				}
+			}
+		}
+	}
+	
+	
+	public static Map<String,ArrayList<String>> loadClusterImageMap(Context ctx)
+	{
+		ObjectInputStream inputStream = null;
+		Map<String,ArrayList<String>> indexMap = new HashMap<String, ArrayList<String>>();
+		try
+		{
+			inputStream = new ObjectInputStream(ctx.openFileInput(CLUSTER_IMAGE_MAP_FILE));
+			indexMap = (Map<String,ArrayList<String>>)inputStream.readObject();         
+			Log.d(LOG_TAG,"Reading from the cluster image file");
+			Set<String> keys = indexMap.keySet();
+			for(String key : keys)
+			{
+				Log.d(LOG_TAG,key + " => " + indexMap.get(key));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		finally
+		{
+			if(inputStream!=null)
+			{
+				try {
+					inputStream.close();
+				} catch (IOException e) {
+					//ignore
+				}
+			}
+		}
+		return indexMap;
+	}
+
+	public static void writeIndex(Context ctx, Map<String,ArrayList<String>> indexMap)
+	{
+		ObjectOutputStream outStream = null;
+		try
+		{
+			outStream = new ObjectOutputStream(ctx.openFileOutput(CLUSTER_IMAGE_MAP_FILE,Context.MODE_PRIVATE));
+			outStream.writeObject(indexMap);
+			outStream.flush();
+			outStream.close();
+			Log.d(LOG_TAG,"Cluster Image Index written to file");
+		} 
+		catch (FileNotFoundException e)
+		{
+			e.printStackTrace();
+		} 
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}  
+		finally
+		{
+			if(outStream!=null)
+			{
+				try {
+					outStream.close();
+				} catch (IOException e) {
+					//ignore
+				}
+			}
+		}
+
+	}
 	
 	public static final String HEADING = "cloudy_moon,super_moon,misty_woods,cloudy_mountains,misty_field,"
 			+ "cloudy_landscape,misty_road,tiny_bathroom,stunning_sunset,cloudy_valley,awesome_clouds,empty_train,"

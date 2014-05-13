@@ -26,6 +26,7 @@
         </activity>
         <activity android:name=".DisplayImageActivity"></activity>
         <activity android:name="edu.columbia.cvml.galleria.activity.DebugActivity"></activity>
+        <activity android:name="edu.columbia.cvml.galleria.activity.CarouselActivity"></activity>
         
         <service android:name="edu.columbia.cvml.galleria.services.ImageDetectorService" 
             android:label="@string/ImageServiceName"

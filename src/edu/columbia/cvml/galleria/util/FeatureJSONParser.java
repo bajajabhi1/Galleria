@@ -43,7 +43,7 @@ public class FeatureJSONParser
 		return featureList;
 	}
 
-	public static String getClusterFeatureString(String json)
+	public static String getClusterFeatureValueString(String json)
 	{
 		String featureStr = "";
 

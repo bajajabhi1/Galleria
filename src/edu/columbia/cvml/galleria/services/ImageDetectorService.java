@@ -39,8 +39,8 @@ public class ImageDetectorService extends Service
 	private static final String LOG_TAG = "ImageDetectorService";
 	private static final String PREFS_FILE_NAME = "ImageDetectorServicePref";
 	private static final String PREFS_NAME_LAST_IMAGE_TIME = "PREFS_NAME_LAST_IMAGE_TIME";
-	private static final int ANNO_DESIREDWIDTH = 640;
-	private static final int ANNO_DESIREDHEIGHT = 480;
+	public static final int ANNO_DESIREDWIDTH = 640;
+	public static final int ANNO_DESIREDHEIGHT = 480;
 	
 	private InvertedIndexManager annotatorIdxMapMgr = null;
 	private InvertedIndexManager faceDetectorIdxMapMgr = null;
@@ -84,6 +84,7 @@ public class ImageDetectorService extends Service
 		faceDetectorIdxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
 		faceDetectorIdxMapMgr.loadIndex();
 		featureMgr = new ClusterFeatureManager(getApplicationContext());
+		featureMgr.loadFeatureLineImageMap();
 		featureMgr.loadImageFeatureMap();
 
 		ImageObserver observer = new ImageObserver(new Handler(),lastImageTime);
@@ -226,8 +227,14 @@ public class ImageDetectorService extends Service
 					List<FeatureValueObject> features = FeatureJSONParser.getFeatureList(output);
 					annotatorIdxMapMgr.addImageEntry(features);
 					annotatorIdxMapMgr.writeIndex();
+					String imageFeatureStr = "";
+					for(FeatureValueObject fvo : features)
+					{
+						imageFeatureStr = imageFeatureStr + ", " + fvo.getFeature();
+					}
 					featureMgr.addImageEntry(FeatureJSONParser.getImageName(output), 
-							FeatureJSONParser.getClusterFeatureString(output));
+							FeatureJSONParser.getClusterFeatureValueString(output), imageFeatureStr);
+					featureMgr.writeFeatureLineImageMap();
 					featureMgr.writeImageFeatureMap();
 				}
 				else if(asyncCode == FaceDetectorAsync.ASYNC_TASK_CODE)
