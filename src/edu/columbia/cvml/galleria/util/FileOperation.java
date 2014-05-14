@@ -10,6 +10,7 @@ import android.content.Context;
 
 public class FileOperation
 {
+	public static String eol = "\r\n";
 
 	public static boolean writeFileToInternalStorage(Context ctx, String fileName, String data)
 	{
@@ -42,7 +43,6 @@ public class FileOperation
 
 	public static String readFileFromInternalStorage(Context ctx, String fileName)
 	{
-		String eol = "\r\n";
 		BufferedReader input = null;
 		try
 		{
