@@ -8,5 +8,5 @@
     <string name="ImageServiceName">GalleriaImageService</string>
 	    <string name="app_label">Galleria</string>
 	        <string name="search_hint">Image search</string>
-	            <string name="search_title">SearchBar</string>
+	            <string name="search_title">Search Image</string>
 </resources>

@@ -4,8 +4,8 @@
           android:title="@string/search_title"
           android:icon="@drawable/ic_launcher"
           android:showAsAction="collapseActionView|ifRoom"
-          android:actionViewClass="android.widget.SearchView" />
-    
+          android:actionViewClass="android.widget.AutoCompleteTextView" />
+ 
         <item
         android:id="@+id/DebugScreen"
         android:orderInCategory="100"

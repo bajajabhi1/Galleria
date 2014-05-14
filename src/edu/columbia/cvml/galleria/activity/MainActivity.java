@@ -2,6 +2,7 @@ package edu.columbia.cvml.galleria.activity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -22,6 +23,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.SearchView;
 import android.widget.SearchView.OnQueryTextListener;
 import android.widget.Toast;
@@ -29,7 +33,12 @@ import android.widget.Toast;
 import com.origamilabs.library.views.StaggeredGridView;
 import com.origamilabs.library.views.StaggeredGridView.OnItemClickListener;
 
+import edu.columbia.cvml.galleria.VO.FeatureValueObject;
+import edu.columbia.cvml.galleria.async.AnnotatorRequestSenderAsync;
+import edu.columbia.cvml.galleria.async.FaceDetectorAsync;
 import edu.columbia.cvml.galleria.services.ImageDetectorService;
+import edu.columbia.cvml.galleria.util.FaceDetectionConstants;
+import edu.columbia.cvml.galleria.util.InvertedIndexManager;
 
 /**
  * 
@@ -43,7 +52,10 @@ import edu.columbia.cvml.galleria.services.ImageDetectorService;
  */
 @SuppressLint("NewApi")
 public class MainActivity extends Activity {
+	public static String imageBasePath = "/storage/emulated/0/DCIM/100MEDIA/";
 	String LOG_TAG =  "MainActivity";
+	Map<String,String> imagePathMap = new HashMap<String,String>();
+	AutoCompleteTextView searchView = null;
 
 	/**
 	 * This will not work so great since the heights of the imageViews 
@@ -75,12 +87,16 @@ public class MainActivity extends Activity {
 		int index = 0;
 		for(String cluster : clusterNameSet)
 		{
+			Log.d(LOG_TAG, "Addding Cluster to imagePath - " + cluster);
 			if(!clusterMap.get(cluster).isEmpty())
+			{
 				imagePath[index] = clusterMap.get(cluster).get(0);
+				Log.d(LOG_TAG, "IMage added to imagePath - " + imagePath[index]);
+			}
 			posClusterMap.put(index, cluster);
 			index +=1;
 		}
-		
+		Log.d(LOG_TAG, "Cluster Size - " +index);
 		CustomStaggeredAdapter adapter = new CustomStaggeredAdapter(MainActivity.this, R.id.imageView1, imagePath);
 		gridView.setAdapter(adapter);
 
@@ -95,8 +111,8 @@ public class MainActivity extends Activity {
 				//String filepath = (String) parent.getAdapter().getItem(position);
 				String cluster = posClusterMap.get(position);
 				i.putStringArrayListExtra("filepath", clusterMap.get(cluster));
-				System.gc();
 				startActivity(i);
+				System.gc();				
 			}
 		}); 
 
@@ -104,7 +120,7 @@ public class MainActivity extends Activity {
 		gridView.setAdapter(adapter);
 		adapter.notifyDataSetChanged();
 		
-		// use this to start and trigger a service
+		// start the service
 		Intent i= new Intent(getApplicationContext(), ImageDetectorService.class);
 		getApplicationContext().startService(i);
 		Log.i(LOG_TAG, "Service start called");
@@ -119,12 +135,16 @@ public class MainActivity extends Activity {
 		Cursor cursor = MediaStore.Images.Media.query(getContentResolver(), extUri, projection, null, MediaStore.MediaColumns.DATE_ADDED + " asc");
 		final String[] imagePath = new String[cursor.getCount()];
 		final ArrayList<String> imagePathList = new ArrayList<String>();
+		imagePathMap = new HashMap<String,String>();
 		int index = 0;
 		while (cursor.moveToNext()) 
 		{
 			imagePath[index] = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
 			imagePathList.add(imagePath[index]);
-			//Log.d(LOG_TAG, "Image = " + imagePath[index]);
+			String fileName = imagePath[index].substring(imagePath[index].lastIndexOf("/")+1);
+			Log.d(LOG_TAG, "Adding to imagePathMap = " + fileName);
+			Log.d(LOG_TAG, "imagePathMap = " + imagePath[index]);
+			imagePathMap.put(fileName, imagePath[index]);			
 			index +=1;
 		}
 		Log.d(LOG_TAG, "size = " + index);
@@ -141,58 +161,59 @@ public class MainActivity extends Activity {
 		}
 		clusterMap.put("Cluster2",cluster2List);
 		cursor.close();
+		
+		// Add the Face Detector Clusters
+		InvertedIndexManager idxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
+		Map<String,List<FeatureValueObject>> facesMap = idxMapMgr.loadIndex();
+		Set<String> keys = facesMap.keySet();
+		ArrayList<String> clusterList = null;
+		for(String key : keys)
+		{
+			List<FeatureValueObject> imageList = facesMap.get(key);
+			clusterList = new ArrayList<String>();
+			for(FeatureValueObject fvo : imageList)
+			{
+				clusterList.add(imagePathMap.get(fvo.getImageName()));
+				Log.d(LOG_TAG, "FaceDetected Finding Image = " + fvo.getImageName());
+				Log.d(LOG_TAG, "FaceDetected IMage = " + imagePathMap.get(fvo.getImageName()));
+			}
+			if(!key.equalsIgnoreCase(FaceDetectionConstants.FACE_DETECT_NONE)) // No need to show none cluster
+			{
+				Log.d(LOG_TAG, "Addding Cluster - " + key);				
+				clusterMap.put(key, clusterList);
+			}
+		}
 		return clusterMap;
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.options_menu, menu);
-
-        // Associate searchable configuration with the SearchView
-        SearchManager searchManager =
-               (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView =
-                (SearchView) menu.findItem(R.id.search).getActionView();
-        searchView.setSearchableInfo(
-                searchManager.getSearchableInfo(getComponentName()));
-        searchView.setClickable(true);
-        searchView.setSubmitButtonEnabled(true);
-        
-        OnQueryTextListener queryListener = new OnQueryTextListener() {
-            
-            @Override
-            public boolean onQueryTextSubmit(String query)
-            {
-                
-                try
-                {
-                Toast.makeText(getApplicationContext(), "Seeking...", Toast.LENGTH_LONG).show();
-                Log.i("ImageList", "textSubmit");
-                
-                onSearchRequested();
-                return true;                
-                } 
-                
-                
-                catch(Exception e) { e.printStackTrace(); return false ; } 
-                
-                
+		getMenuInflater().inflate(R.menu.activity_main, menu);
+		searchView = (AutoCompleteTextView) menu.findItem(R.id.search).getActionView();
+		String[] androidBooks =
+			{
+			"Hello, Android - Ed Burnette",
+			"Professional Android 2 App Dev - Reto Meier",
+			"Unlocking Android - Frank Ableson",
+			"Android App Development - Blake Meike",
+			"Pro Android 2 - Dave MacLean",
+			"Beginning Android 2 - Mark Murphy",
+			"Android Programming Tutorials - Mark Murphy",
+			"Android Wireless App Development - Lauren Darcey",
+			"Pro Android Games - Vladimir Silva",
+			};
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,androidBooks);
+		searchView.setAdapter(adapter);
+		searchView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			 
+            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,long arg3) {
+                // TODO Auto-generated method stub
+                String getContryName = searchView.getText().toString().trim();
+                Toast.makeText(getApplicationContext(), "Selected - " + getContryName, Toast.LENGTH_SHORT).show();  
             }
-
-           @Override
-           public boolean onQueryTextChange(String newText) {
-               // TODO Absolutely nothing;
-               //Can't do anything 
-               return false;
-           }
-
-        };
-        
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(new ComponentName(getApplicationContext(), ImageSearchActivity.class)));
-        searchView.setQueryHint("Search for images...");
-        return true;
-    }
+        });
+		return true;
+	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
@@ -201,26 +222,17 @@ public class MainActivity extends Activity {
 		{
 		case R.id.DebugScreen:
 			Toast.makeText(MainActivity.this, "DebugScreen is selected", Toast.LENGTH_SHORT).show();
-			Intent intent = new Intent(MainActivity.this, WekaDebugActivity.class);
+			Intent intent = new Intent(MainActivity.this, DebugActivity.class);
+			startActivity(intent);
+			return true;
+		case R.id.WekaDebugScreen:
+			Toast.makeText(MainActivity.this, "Weka DebugScreen is selected", Toast.LENGTH_SHORT).show();
+			intent = new Intent(MainActivity.this, WekaDebugActivity.class);
 			startActivity(intent);
 			return true;
 
 		default:
 			return super.onOptionsItemSelected(item);
-		}
-	}    
-
-	private void shuffleArray(Object[] array)
-	{
-		int index; 
-		Object temp;
-		Random random = new Random();
-		for (int i = array.length - 1; i > 0; i--)
-		{
-			index = random.nextInt(i + 1);
-			temp = array[index];
-			array[index] = array[i];
-			array[i] = temp;
 		}
 	}
 }
