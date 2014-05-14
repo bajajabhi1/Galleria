@@ -70,11 +70,9 @@ public class DebugActivity extends Activity implements AsyncTaskRequestResponse 
 		});
 		
 		// use this to start and trigger a service
-		Intent i= new Intent(getApplicationContext(), ImageDetectorService.class);
-		// potentially add data to the intent
-		i.putExtra("KEY1", "Value to be used by the service");
-		getApplicationContext().startService(i);
-		Log.i(LOG_TAG, "Service start called");
+		//Intent i= new Intent(getApplicationContext(), ImageDetectorService.class);
+		//getApplicationContext().startService(i);
+		//Log.i(LOG_TAG, "Service start called");
 		
 		TextView text = (TextView) findViewById(R.id.annotations);
 		text.setText(loadIndexFile(1));

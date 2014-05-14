@@ -23,6 +23,8 @@ import android.widget.Toast;
 import com.origamilabs.library.views.StaggeredGridView;
 import com.origamilabs.library.views.StaggeredGridView.OnItemClickListener;
 
+import edu.columbia.cvml.galleria.services.ImageDetectorService;
+
 /**
  * 
  * This will not work so great since the heights of the imageViews 
@@ -95,6 +97,11 @@ public class MainActivity extends Activity {
 		adapter.notifyDataSetChanged();
 		gridView.setAdapter(adapter);
 		adapter.notifyDataSetChanged();
+		
+		// use this to start and trigger a service
+		Intent i= new Intent(getApplicationContext(), ImageDetectorService.class);
+		getApplicationContext().startService(i);
+		Log.i(LOG_TAG, "Service start called");
 	}
 	
 	private Map<String,ArrayList<String>> simulateClusterMethod()
