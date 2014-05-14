@@ -84,7 +84,9 @@ public class CarouselActivity extends Activity implements TextWatcher, OnItemCli
 		CarouselDataItem docu;
 		Iterator<String> itr = filepath.iterator();
 		// load the image feature map
-		ClusterFeatureManager cfm = new ClusterFeatureManager(getApplicationContext());
+		//ClusterFeatureManager cfm = new ClusterFeatureManager(getApplicationContext());
+		ClusterFeatureManager cfm = ClusterFeatureManager.getInstance(getApplicationContext());
+		
 		Map<String,String> imageFeatureMap = cfm.loadImageFeatureMap();
 		while (itr.hasNext()) 
 		{

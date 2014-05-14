@@ -64,7 +64,8 @@ public class AsyncClusterer extends AsyncTask <Context, Object, String>{
     protected String performClustering(Context context) throws Exception
     {
         String output = "";
-        ClusterFeatureManager CFM = new ClusterFeatureManager(context);
+        //ClusterFeatureManager CFM = new ClusterFeatureManager(context);
+        ClusterFeatureManager CFM =  ClusterFeatureManager.getInstance (context);
         WekaWrapper wek = new WekaWrapper();
         Log.i(LOG_TAG,"wrapper created");   
         Map<String,ArrayList<String>> indexMap = null;
@@ -82,7 +83,7 @@ public class AsyncClusterer extends AsyncTask <Context, Object, String>{
        InputStream fileinput = currentActivity.openFileInput(wek.tempfile);
        
        wek.loadData(fileinput);
-       wek.setNumberOfClusters(4);
+       wek.setNumberOfClusters(10);
        Log.i(LOG_TAG,"Data loaded");
         wek.loadIndex(CFM.loadFeatureLineImageMap());           
         Log.i(LOG_TAG,"index loaded");

@@ -180,8 +180,8 @@ public class WekaDebugActivity extends Activity implements AsyncTaskRequestRespo
 	
 	private String loadClusteringFile()
 	{
-		ClusterFeatureManager featureMgr = new ClusterFeatureManager(getApplicationContext());
-		
+		//ClusterFeatureManager featureMgr = new ClusterFeatureManager(getApplicationContext());
+	    ClusterFeatureManager featureMgr = ClusterFeatureManager.getInstance(getApplicationContext());
 		String featureFile = featureMgr.loadClusterImageFile();
 		if(null == featureFile)
 			return "EMPTY!";

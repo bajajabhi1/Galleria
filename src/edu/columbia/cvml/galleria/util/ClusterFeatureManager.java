@@ -14,7 +14,7 @@ import android.util.Log;
 
 public class ClusterFeatureManager 
 {
-	Context ctx = null;
+	static Context ctx = null;
 	public static final String FEATURE_FILE_CSV = "clustering_file_csv";
 	//^Final CSV File which will be used for clustering
 	public static final String FEATURELINE_IMAGE_MAP_FILE = "feature_image_map";
@@ -24,19 +24,30 @@ public class ClusterFeatureManager
 	public static final String CLUSTER_IMAGE_MAP_FILE = "cluster_image_map";
 	// Map: (String ClusterID-> ArrayList <Filename String>)
 	private static final String LOG_TAG = "ClusterFeatureManager";
-	private Map<Integer,String> featureLineImageMap = new HashMap<Integer,String>();
-	private Map<String,String> imageFeatureMap = new HashMap<String,String>();
+	private static  Map<Integer,String> featureLineImageMap = new HashMap<Integer,String>();
+	private static Map<String,String> imageFeatureMap = new HashMap<String,String>();
 	public static final char FEATURE_SEPARATOR = ','; 
 
-	int lineCounter = 0;
-
-	public ClusterFeatureManager(Context context)
+	static int lineCounter = 0;
+	static ClusterFeatureManager singleMgr;
+	
+	private ClusterFeatureManager(Context context)
 	{
 		this.ctx = context;
 		init();
 	}
+	
+	static public synchronized ClusterFeatureManager getInstance(Context context){
+	    if (null==singleMgr){
+	        singleMgr = new ClusterFeatureManager(context);
+	    }
+	        
+	    return singleMgr;
+	    
+	}
+	
 
-	public void init()
+	static public void init()
 	{
 		// Initialize the file only if there is no existing
 		if (null == FileOperation.readFileFromInternalStorage(ctx, FEATURE_FILE_CSV))
@@ -45,35 +56,45 @@ public class ClusterFeatureManager
 			lineCounter = 0;
 			Log.d(LOG_TAG,"Initialized new feature file");
 		}
+		else {
+		    lineCounter = imageFeatureMap.size();
+		    Log.d(LOG_TAG, "Initialzied a new lineCounter");
+		}
 	}
 
 	/**
 	 *  Input is image file name and the string of features separated by separator
 	 */
-	public void addImageEntry(String imageName, String featureValues, String topK_featureStr)
+	synchronized static public void  addImageEntry(String imageName, String featureValues, String topK_featureStr)
 	{
 		Log.d(LOG_TAG," in addImageEntry");
 		
-		//if (!imageFeatureMap.containsKey(imageName) && (imageName!=null) && (!imageName.equals(null))) {
+		if (!imageFeatureMap.containsKey(imageName) && (imageName!=null) && (!imageName.equals(null))) {
 		    
+            
+        
+		    loadFeatureLineImageMap();
+		    loadImageFeatureMap();
 		    lineCounter++;
 		    featureLineImageMap.put(lineCounter,imageName);
 		    // Put Top K feature in this map
 		    imageFeatureMap.put(imageName, topK_featureStr);
 		    FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE_CSV, featureValues + "\n");
-//		}
-//		else{
-//		    Log.w(LOG_TAG, "Averted messed up/duplicate entry for file "+imageName);
-//		}
+		    writeFeatureLineImageMap();
+		    writeImageFeatureMap();
+		}
+		else{
+		    Log.w(LOG_TAG, "Averted messed up/duplicate entry for file "+imageName);
+		}
 		
 	}
 
-	public String loadClusterImageFile()
+	static public String loadClusterImageFile()
 	{
 		return FileOperation.readFileFromInternalStorage(ctx, FEATURE_FILE_CSV);
 	}
 
-	public Map<Integer,String> loadFeatureLineImageMap()
+	static public Map<Integer,String> loadFeatureLineImageMap()
 	{
 		ObjectInputStream inputStream = null;
 		try
@@ -104,7 +125,7 @@ public class ClusterFeatureManager
 		return featureLineImageMap;
 	}
 
-	public Map<String,String> loadImageFeatureMap()
+	static public Map<String,String> loadImageFeatureMap()
 	{
 		ObjectInputStream inputStream = null;
 		try
@@ -135,7 +156,7 @@ public class ClusterFeatureManager
 		return imageFeatureMap;
 	}
 
-	public void writeFeatureLineImageMap()
+	static public void writeFeatureLineImageMap()
 	{
 		ObjectOutputStream outStream = null;
 		try
@@ -164,7 +185,7 @@ public class ClusterFeatureManager
 
 	}
 
-	public void writeImageFeatureMap()
+	static public void writeImageFeatureMap()
 	{
 		ObjectOutputStream outStream = null;
 		try

@@ -84,9 +84,9 @@ public class ImageDetectorService extends Service
 		annotatorIdxMapMgr.loadIndex();
 		faceDetectorIdxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
 		faceDetectorIdxMapMgr.loadIndex();
-		featureMgr = new ClusterFeatureManager(getApplicationContext());
-		featureMgr.loadFeatureLineImageMap();
-		featureMgr.loadImageFeatureMap();
+		featureMgr =  ClusterFeatureManager.getInstance(getApplicationContext());
+		//featureMgr.loadFeatureLineImageMap();
+		//featureMgr.loadImageFeatureMap();
 
 		ImageObserver observer = new ImageObserver(new Handler(),lastImageTime);
 
@@ -231,10 +231,13 @@ public class ImageDetectorService extends Service
 					{
 						imageFeatureStr = imageFeatureStr + ", " + fvo.getFeature();
 					}
+					
+				    //featureMgr.loadFeatureLineImageMap();
+				    //featureMgr.loadImageFeatureMap();
 					featureMgr.addImageEntry(FeatureJSONParser.getImageName(output), 
 							FeatureJSONParser.getClusterFeatureValueString(output), imageFeatureStr);
-					featureMgr.writeFeatureLineImageMap();
-					featureMgr.writeImageFeatureMap();
+					//featureMgr.writeFeatureLineImageMap();
+					//featureMgr.writeImageFeatureMap();
 				}
 				else if(asyncCode == FaceDetectorAsync.ASYNC_TASK_CODE)
 				{
