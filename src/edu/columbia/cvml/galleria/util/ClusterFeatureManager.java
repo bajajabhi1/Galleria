@@ -23,15 +23,15 @@ public class ClusterFeatureManager
 	private Map<Integer,String> featureLineImageMap = new HashMap<Integer,String>();
 	private Map<String,String> imageFeatureMap = new HashMap<String,String>();
 	public static final char FEATURE_SEPARATOR = ','; 
-	
+
 	int lineCounter = 0;
-	
+
 	public ClusterFeatureManager(Context context)
 	{
 		this.ctx = context;
 		init();
 	}
-	
+
 	public void init()
 	{
 		// Initialize the file only if there is no existing
@@ -55,7 +55,7 @@ public class ClusterFeatureManager
 		imageFeatureMap.put(imageName, topK_featureStr);
 		FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE_CSV, featureValues + "\n");
 	}
-	
+
 	public String loadClusterImageFile()
 	{
 		return FileOperation.readFileFromInternalStorage(ctx, FEATURE_FILE_CSV);
@@ -76,7 +76,7 @@ public class ClusterFeatureManager
 			}
 		} catch (Exception e) {
 			Log.e(LOG_TAG,e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		finally
 		{
@@ -91,7 +91,7 @@ public class ClusterFeatureManager
 		}
 		return featureLineImageMap;
 	}
-	
+
 	public Map<String,String> loadImageFeatureMap()
 	{
 		ObjectInputStream inputStream = null;
@@ -107,7 +107,7 @@ public class ClusterFeatureManager
 			}
 		} catch (Exception e) {
 			Log.e(LOG_TAG,e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		finally
 		{
@@ -134,14 +134,10 @@ public class ClusterFeatureManager
 			outStream.close();
 			Log.d(LOG_TAG,"Index written to file");
 		} 
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}  
+		catch (Exception e) {
+			Log.e(LOG_TAG,e.getMessage());
+			//e.printStackTrace();
+		}
 		finally
 		{
 			if(outStream!=null)
@@ -155,7 +151,7 @@ public class ClusterFeatureManager
 		}
 
 	}
-	
+
 	public void writeImageFeatureMap()
 	{
 		ObjectOutputStream outStream = null;
@@ -166,15 +162,12 @@ public class ClusterFeatureManager
 			outStream.flush();
 			outStream.close();
 			Log.d(LOG_TAG,"image features map loaded from file");
+
 		} 
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}  
+		catch (Exception e) {
+			Log.e(LOG_TAG,e.getMessage());
+			//e.printStackTrace();
+		}
 		finally
 		{
 			if(outStream!=null)
@@ -187,8 +180,8 @@ public class ClusterFeatureManager
 			}
 		}
 	}
-	
-	
+
+
 	public static Map<String,ArrayList<String>> loadClusterImageMap(Context ctx)
 	{
 		ObjectInputStream inputStream = null;
@@ -204,7 +197,8 @@ public class ClusterFeatureManager
 				Log.d(LOG_TAG,key + " => " + indexMap.get(key));
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
+			Log.e(LOG_TAG,e.getMessage());
 		}
 		finally
 		{
@@ -230,15 +224,12 @@ public class ClusterFeatureManager
 			outStream.flush();
 			outStream.close();
 			Log.d(LOG_TAG,"Cluster Image Index written to file");
+
 		} 
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
+		catch (Exception e) {
+			Log.e(LOG_TAG,e.getMessage());
+			//e.printStackTrace();
 		} 
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}  
 		finally
 		{
 			if(outStream!=null)
@@ -252,7 +243,7 @@ public class ClusterFeatureManager
 		}
 
 	}
-	
+
 	public static final String HEADING = "cloudy_moon,super_moon,misty_woods,cloudy_mountains,misty_field,"
 			+ "cloudy_landscape,misty_road,tiny_bathroom,stunning_sunset,cloudy_valley,awesome_clouds,empty_train,"
 			+ "misty_sunrise,rough_waves,classic_cars,bright_moon,tiny_mushrooms,powerful_waves,misty_night,lovely_clouds,"

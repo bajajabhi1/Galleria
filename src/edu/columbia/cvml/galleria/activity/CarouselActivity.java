@@ -93,7 +93,7 @@ public class CarouselActivity extends Activity implements TextWatcher, OnItemCli
 			String imageName = path.substring(path.lastIndexOf("/")+1,path.length());
 			Log.d(LOG_TAG, "Image name = " + imageName);
 			if(imageFeatureMap.get(imageName) == null)
-				docu = new CarouselDataItem(path, 0,"No annotations found No annotations found No annotations found No annotations found");
+				docu = new CarouselDataItem(path, 0,"No annotations found for this image");
 			else
 				docu = new CarouselDataItem(path, 0, imageFeatureMap.get(imageName));
 			Docus.add(docu);
@@ -110,14 +110,7 @@ public class CarouselActivity extends Activity implements TextWatcher, OnItemCli
 	    AppUtils.AddView(panel, etSearch, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 
 	    		new int[][]{new int[]{RelativeLayout.CENTER_HORIZONTAL}, new int[]{RelativeLayout.ALIGN_PARENT_TOP}}, -1,-1);
 	    etSearch.addTextChangedListener((TextWatcher) this); 
-
-	    // add logo
-	    //TextView tv = new TextView(this);
-	    //tv.setTextColor(Color.BLACK);
-	    //tv.setText("www.pocketmagic.net");
-	    //AppUtils.AddView(panel, tv, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 
-	    //		new int[][]{new int[]{RelativeLayout.CENTER_HORIZONTAL}, new int[]{RelativeLayout.ALIGN_PARENT_BOTTOM}}, -1,-1);
-	    
+    
 	    // create the carousel
 	    CarouselView coverFlow = new CarouselView(this);
         
@@ -142,18 +135,6 @@ public class CarouselActivity extends Activity implements TextWatcher, OnItemCli
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
 		m_carouselAdapter.getFilter().filter(s.toString()); 
 	}
-
-	/*public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		CarouselDataItem docu =  (CarouselDataItem) m_carouselAdapter.getItem((int) arg3);
-		 if (docu!=null)
-		 {
-			
-			 Intent i = new Intent(CarouselActivity.this, DisplayImageActivity.class);
-			 i.putExtra("filepath", docu.getImgPath());
-			 System.gc();
-			 startActivity(i);
-		 }
-	}*/
 
 	public void onNothingSelected(AdapterView<?> arg0) {}
 

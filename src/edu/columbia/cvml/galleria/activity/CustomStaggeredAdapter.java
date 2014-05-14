@@ -41,7 +41,8 @@ public class CustomStaggeredAdapter extends ArrayAdapter<String> {
 		holder = (ViewHolder) convertView.getTag();
 		String resourceURL = getItem(position);
 		Log.i(LOG_TAG, "found:"+ resourceURL);
-		DisplayImage(getItem(position), holder.imageView);
+		if(resourceURL!=null)
+			DisplayImage(getItem(position), holder.imageView);
 		return convertView;
 	}
 
