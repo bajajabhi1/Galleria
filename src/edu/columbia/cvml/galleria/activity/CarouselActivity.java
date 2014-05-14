@@ -39,17 +39,16 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 import edu.columbia.cvml.galleria.carousel.AppUtils;
 import edu.columbia.cvml.galleria.carousel.CarouselDataItem;
 import edu.columbia.cvml.galleria.carousel.CarouselView;
 import edu.columbia.cvml.galleria.carousel.Singleton;
 import edu.columbia.cvml.galleria.util.ClusterFeatureManager;
 
-public class CarouselActivity extends Activity implements OnItemSelectedListener, TextWatcher {
+public class CarouselActivity extends Activity implements TextWatcher, OnItemClickListener {//,OnItemSelectedListener{
 	
 	Singleton 				m_Inst 					= Singleton.getInstance();
 	CarouselViewAdapter 	m_carouselAdapter		= null;	 
@@ -128,7 +127,8 @@ public class CarouselActivity extends Activity implements OnItemSelectedListener
         coverFlow.setSpacing(-1*m_Inst.Scale(150));
         coverFlow.setSelection(Integer.MAX_VALUE / 2, true);
         coverFlow.setAnimationDuration(1000);
-        coverFlow.setOnItemSelectedListener((OnItemSelectedListener) this);
+        //coverFlow.setOnItemSelectedListener((OnItemSelectedListener) this);
+        coverFlow.setOnItemClickListener((OnItemClickListener) this);
 
         AppUtils.AddView(panel, coverFlow, LayoutParams.FILL_PARENT,LayoutParams.WRAP_CONTENT, 
         		new int[][]{new int[]{RelativeLayout.CENTER_IN_PARENT}},
@@ -143,16 +143,31 @@ public class CarouselActivity extends Activity implements OnItemSelectedListener
 		m_carouselAdapter.getFilter().filter(s.toString()); 
 	}
 
-	public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		 CarouselDataItem docu =  (CarouselDataItem) m_carouselAdapter.getItem((int) arg3);
+	/*public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+		CarouselDataItem docu =  (CarouselDataItem) m_carouselAdapter.getItem((int) arg3);
 		 if (docu!=null)
 		 {
-			 //Toast.makeText(this, "You've clicked on:"+docu.getDocText(), Toast.LENGTH_SHORT).show();
+			
+			 Intent i = new Intent(CarouselActivity.this, DisplayImageActivity.class);
+			 i.putExtra("filepath", docu.getImgPath());
+			 System.gc();
+			 startActivity(i);
 		 }
-	}
+	}*/
 
 	public void onNothingSelected(AdapterView<?> arg0) {}
 
-
-    
+	@Override
+	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+		CarouselDataItem docu =  (CarouselDataItem) m_carouselAdapter.getItem((int) arg3);
+		 if (docu!=null)
+		 {
+			
+			 Intent i = new Intent(CarouselActivity.this, DisplayImageActivity.class);
+			 i.putExtra("filepath", docu.getImgPath());
+			 System.gc();
+			 startActivity(i);
+		 }
+		
+	}   
 }

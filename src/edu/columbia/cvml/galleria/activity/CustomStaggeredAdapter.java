@@ -2,21 +2,20 @@ package edu.columbia.cvml.galleria.activity;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import edu.columbia.cvml.galleria.loader.ImageLoader;
-import edu.columbia.cvml.galleria.services.ImageDetectorService;
-import edu.columbia.cvml.galleria.util.ScalingUtility;
-import edu.columbia.cvml.galleria.util.ScalingUtility.ScalingLogic;
+import edu.columbia.cvml.galleria.util.BitMapDecoder;
 import edu.columbia.cvml.galleria.views.ScaleImageView;
 
 public class CustomStaggeredAdapter extends ArrayAdapter<String> {
 
+	private static final int ANNO_DESIREDWIDTH = 480;
+	private static final int ANNO_DESIREDHEIGHT = 320;
+	
 	String LOG_TAG =  "CustomStaggeredAdapter";
 	public CustomStaggeredAdapter(Context context, int textViewResourceId,
 			String[] objects) {
@@ -48,8 +47,8 @@ public class CustomStaggeredAdapter extends ArrayAdapter<String> {
 
 	public void DisplayImage(String url, ImageView imageView)
 	{
-
-		Bitmap bitmap = BitmapFactory.decodeFile(url);	    	
+		Bitmap bitmap = BitMapDecoder.decodeSampledBitmap(url, ANNO_DESIREDHEIGHT, ANNO_DESIREDWIDTH);
+		/*Bitmap bitmap = BitmapFactory.decodeFile(url);	    	
 		if(bitmap.getWidth() > bitmap.getHeight())
 		{
 			bitmap = ScalingUtility.createScaledBitmap(bitmap, ImageDetectorService.ANNO_DESIREDWIDTH, ImageDetectorService.ANNO_DESIREDHEIGHT, ScalingLogic.FIT);
@@ -57,7 +56,7 @@ public class CustomStaggeredAdapter extends ArrayAdapter<String> {
 		else
 		{
 			bitmap = ScalingUtility.createScaledBitmap(bitmap, ImageDetectorService.ANNO_DESIREDHEIGHT, ImageDetectorService.ANNO_DESIREDWIDTH, ScalingLogic.FIT);
-		}
+		}*/
 		//Bitmap bitmap=memoryCache.get(url);
 		if(bitmap!=null)
 			imageView.setImageBitmap(bitmap);
