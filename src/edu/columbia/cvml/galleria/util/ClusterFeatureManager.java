@@ -49,8 +49,12 @@ public class ClusterFeatureManager
 	public static int getClusteringFileLineCount(Context context)
 	{
 		String csv = FileOperation.readFileFromInternalStorage(context, FEATURE_FILE_CSV);
-		String lineParts[] = csv.split(FileOperation.eol);
-		lineCounter = lineParts.length -1;		
+		if(csv!=null)
+		{
+			String lineParts[] = csv.split(FileOperation.eol);
+			Log.i(LOG_TAG, "parts size - " + lineParts.length);
+			lineCounter = lineParts.length -1;		
+		}
 		return lineCounter;
 	}
 

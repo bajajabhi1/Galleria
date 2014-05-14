@@ -18,7 +18,10 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -99,7 +102,7 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 			Log.d(LOG_TAG, "Addding Cluster to imagePath - " + cluster);
 			if(!clusterMap.get(cluster).isEmpty())
 			{
-				imagePath[index] = imageBasePath + clusterMap.get(cluster).get(0);
+				imagePath[index] = clusterMap.get(cluster).get(0);
 				Log.d(LOG_TAG, "IMage added to imagePath - " + imagePath[index]);
 			}
 			posClusterMap.put(index, cluster);
@@ -198,7 +201,7 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 
 	private Map<String,ArrayList<String>> loadClusters()
 	{
-		/*Map<String,ArrayList<String>> clusterMap = new HashMap<String,ArrayList<String>>();
+		//Map<String,ArrayList<String>> clusterMap = new HashMap<String,ArrayList<String>>();
 		Uri extUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 		String[] projection = new String[] { MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.Images.Media.DATA,
 				MediaStore.MediaColumns.DATE_ADDED, MediaStore.MediaColumns._ID };
@@ -218,7 +221,7 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 			index +=1;
 		}
 		Log.d(LOG_TAG, "size = " + index);
-		ArrayList<String> cluster1List = new ArrayList<String>();
+		/*ArrayList<String> cluster1List = new ArrayList<String>();
 		for(int i = 0;i<4 && i<index;i++)
 		{
 			cluster1List.add(imagePathList.get(i));			
@@ -229,23 +232,35 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 		{
 			cluster2List.add(imagePathList.get(i));			
 		}
-		clusterMap.put("Cluster2",cluster2List);
-		cursor.close();*/
+		clusterMap.put("Cluster2",cluster2List);*/
+		cursor.close();
 
+		Map<String,ArrayList<String>> clusterFilePathMap = 	new HashMap<String,ArrayList<String>>();
+		
 		Map<String,ArrayList<String>> clusterMap = ClusterFeatureManager.loadClusterImageMap(getApplicationContext());
 		imageCount = 0;
 		Set<String> keyset = clusterMap.keySet();
+		ArrayList<String> clusterList = null;
 		for(String key : keyset)
 		{
+			clusterList = new ArrayList<String>();
 			ArrayList<String> images = clusterMap.get(key);
+			for(String image: images)
+			{
+				clusterList.add(imagePathMap.get(image));
+				Log.d(LOG_TAG, "adding Image = " + image);
+				Log.d(LOG_TAG, "IMage path = " + imagePathMap.get(image));
+			}			
 			imageCount = imageCount + images.size();
+			Log.d(LOG_TAG, "Addding Cluster - " + key);				
+			clusterFilePathMap.put(key, clusterList);
 		}
-				
+		
+		
 		// Add the Face Detector Clusters
 		InvertedIndexManager idxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
 		Map<String,List<FeatureValueObject>> facesMap = idxMapMgr.loadIndex();
 		Set<String> keys = facesMap.keySet();
-		ArrayList<String> clusterList = null;
 		for(String key : keys)
 		{
 			List<FeatureValueObject> imageList = facesMap.get(key);
@@ -253,16 +268,17 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 			for(FeatureValueObject fvo : imageList)
 			{
 				clusterList.add(imagePathMap.get(fvo.getImageName()));
+				//clusterList.add(imageBasePath+fvo.getImageName());
 				Log.d(LOG_TAG, "FaceDetected Finding Image = " + fvo.getImageName());
 				Log.d(LOG_TAG, "FaceDetected IMage = " + imagePathMap.get(fvo.getImageName()));
 			}
 			if(!key.equalsIgnoreCase(FaceDetectionConstants.FACE_DETECT_NONE)) // No need to show none cluster
 			{
 				Log.d(LOG_TAG, "Addding Cluster - " + key);				
-				clusterMap.put(key, clusterList);
+				clusterFilePathMap.put(key, clusterList);
 			}
 		}
-		return clusterMap;
+		return clusterFilePathMap;
 	}
 
 	@Override
