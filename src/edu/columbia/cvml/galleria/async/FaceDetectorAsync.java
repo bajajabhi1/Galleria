@@ -15,7 +15,7 @@ public class FaceDetectorAsync extends AsyncTask<Bitmap, Void, String> {
 
 	public static final String ASYNC_TASK_CODE = "FaceDetector";
 	public static final String INDEX_FILE = "FaceDetector_INDEX";
-	public static final String FACEDETECTOR_FILENAME_SEPARATOR = ":";
+	public static final String FACEDETECTOR_FILENAME_SEPARATOR = "::";
 	private static final String LOG_TAG = "FaceDetector";
 
 	public AsyncTaskRequestResponse delegate=null;

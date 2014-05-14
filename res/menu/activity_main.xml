@@ -1,5 +1,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
+    <item android:id="@+id/search"
+          android:title="@string/search_title"
+          android:icon="@drawable/ic_menu_search"
+          android:showAsAction="collapseActionView|ifRoom"
+          android:actionViewClass="android.widget.AutoCompleteTextView" />
     <item
         android:id="@+id/DebugScreen"
         android:orderInCategory="100"
@@ -10,7 +15,7 @@
         android:id="@+id/WekaDebugScreen"
         android:orderInCategory="100"
         android:showAsAction="never"
-        android:title="@string/menu_debugScreen"/>
+        android:title="@string/weka_debug_string"/>
     
      
 

@@ -41,7 +41,8 @@ public class ImageDetectorService extends Service
 	private static final String PREFS_NAME_LAST_IMAGE_TIME = "PREFS_NAME_LAST_IMAGE_TIME";
 	public static final int ANNO_DESIREDWIDTH = 640;
 	public static final int ANNO_DESIREDHEIGHT = 480;
-	
+	private Set<String> lastProcessed = new LinkedHashSet<String>();
+
 	private InvertedIndexManager annotatorIdxMapMgr = null;
 	private InvertedIndexManager faceDetectorIdxMapMgr = null;
 	private ClusterFeatureManager featureMgr = null;
@@ -111,8 +112,7 @@ public class ImageDetectorService extends Service
 		public static final String LOG_TAG = "ImageObserver";
 		private int lastImageTime = 0;
 		private boolean isProcessingSuccess = false;
-		private Set<String> lastProcessed = new LinkedHashSet<String>();
-
+		
 		public ImageObserver(Handler handler, int lastImageTime)
 		{
 			super(handler);
@@ -187,7 +187,6 @@ public class ImageDetectorService extends Service
 				Log.d(LOG_TAG, "Processing - " + displayName + "," + dateCreated);
 				lastImageTime = dateCreated;
 			}
-			lastProcessed.clear();
 			lastProcessed.addAll(currImgSet);
 			cursor.close();
 			Log.d(LOG_TAG, listOfImage);
@@ -242,8 +241,10 @@ public class ImageDetectorService extends Service
 					Log.d(LOG_TAG, "Processing Face Detection Finished");
 					Toast.makeText(getApplicationContext(), "Faces Detected - " + output, Toast.LENGTH_LONG).show();
 					Log.d(LOG_TAG, "Faces Detected - " + output);
-					String fileName = output.substring(0,output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR)+1);
-					String faces = output.substring(output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR)+1);
+					String fileName = output.substring(0,output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR));
+					Log.d(LOG_TAG, "Faces fileName - " + fileName);
+					String faces = output.substring(output.indexOf(FaceDetectorAsync.FACEDETECTOR_FILENAME_SEPARATOR)+2);
+					Log.d(LOG_TAG, "Faces - " + faces);
 					FeatureValueObject fvo = new FeatureValueObject(fileName, faces, 1f);
 					faceDetectorIdxMapMgr.addSingleFeatureEntry(fvo);
 					faceDetectorIdxMapMgr.writeIndex();
