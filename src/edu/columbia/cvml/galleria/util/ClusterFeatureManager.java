@@ -15,10 +15,14 @@ import android.util.Log;
 public class ClusterFeatureManager 
 {
 	Context ctx = null;
-	private static final String FEATURE_FILE_CSV = "clustering_file_csv";
-	private static final String FEATURELINE_IMAGE_MAP_FILE = "feature_image_map";
-	private static final String IMAGE_FEATURE_MAP_FILE = "image_feature_map";
-	private static final String CLUSTER_IMAGE_MAP_FILE = "cluster_image_map";
+	public static final String FEATURE_FILE_CSV = "clustering_file_csv";
+	//^Final CSV File which will be used for clustering
+	public static final String FEATURELINE_IMAGE_MAP_FILE = "feature_image_map";
+	// Map -> Integer : Filename String pairs - to be consumed by WekaWrapper
+	public static final String IMAGE_FEATURE_MAP_FILE = "image_feature_map";
+	// Map: (Image Name -> <Key String, Value String>)
+	public static final String CLUSTER_IMAGE_MAP_FILE = "cluster_image_map";
+	// Map: (String ClusterID-> ArrayList <Filename String>)
 	private static final String LOG_TAG = "ClusterFeatureManager";
 	private Map<Integer,String> featureLineImageMap = new HashMap<Integer,String>();
 	private Map<String,String> imageFeatureMap = new HashMap<String,String>();
@@ -214,7 +218,7 @@ public class ClusterFeatureManager
 		return indexMap;
 	}
 
-	public static void writeIndex(Context ctx, Map<String,ArrayList<String>> indexMap)
+	public static void writeClusterFeatureMap(Context ctx, Map<String,ArrayList<String>> indexMap)
 	{
 		ObjectOutputStream outStream = null;
 		try

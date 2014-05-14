@@ -9,6 +9,9 @@ import java.util.Set;
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.SearchManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -16,8 +19,11 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.SearchView;
+import android.widget.SearchView.OnQueryTextListener;
 import android.widget.Toast;
 
 import com.origamilabs.library.views.StaggeredGridView;
@@ -140,9 +146,53 @@ public class MainActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_main, menu);
-		return true;
-	}
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+
+        // Associate searchable configuration with the SearchView
+        SearchManager searchManager =
+               (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView =
+                (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
+        searchView.setClickable(true);
+        searchView.setSubmitButtonEnabled(true);
+        
+        OnQueryTextListener queryListener = new OnQueryTextListener() {
+            
+            @Override
+            public boolean onQueryTextSubmit(String query)
+            {
+                
+                try
+                {
+                Toast.makeText(getApplicationContext(), "Seeking...", Toast.LENGTH_LONG).show();
+                Log.i("ImageList", "textSubmit");
+                
+                onSearchRequested();
+                return true;                
+                } 
+                
+                
+                catch(Exception e) { e.printStackTrace(); return false ; } 
+                
+                
+            }
+
+           @Override
+           public boolean onQueryTextChange(String newText) {
+               // TODO Absolutely nothing;
+               //Can't do anything 
+               return false;
+           }
+
+        };
+        
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(new ComponentName(getApplicationContext(), ImageSearchActivity.class)));
+        searchView.setQueryHint("Search for images...");
+        return true;
+    }
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
@@ -151,7 +201,7 @@ public class MainActivity extends Activity {
 		{
 		case R.id.DebugScreen:
 			Toast.makeText(MainActivity.this, "DebugScreen is selected", Toast.LENGTH_SHORT).show();
-			Intent intent = new Intent(MainActivity.this, DebugActivity.class);
+			Intent intent = new Intent(MainActivity.this, WekaDebugActivity.class);
 			startActivity(intent);
 			return true;
 

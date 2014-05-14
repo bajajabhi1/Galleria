@@ -28,6 +28,7 @@ import android.widget.Toast;
 import edu.columbia.cvml.galleria.VO.FeatureValueObject;
 import edu.columbia.cvml.galleria.weka.WekaWrapper;
 import edu.columbia.cvml.galleria.async.AnnotatorRequestSenderAsync;
+import edu.columbia.cvml.galleria.async.AsyncClusterer;
 import edu.columbia.cvml.galleria.async.AsyncTaskRequestResponse;
 import edu.columbia.cvml.galleria.async.FaceDetectorAsync;
 import edu.columbia.cvml.galleria.services.ImageDetectorService;
@@ -72,54 +73,57 @@ public class WekaDebugActivity extends Activity implements AsyncTaskRequestRespo
 		});
 		
 		button = (Button) findViewById(R.id.AndroidWekaTest);
+		
+		
         button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                String output = "";
-                TextView text = (TextView) findViewById(R.id.annotations);
-                AssetManager aMan = getAssets();
-                InputStream imagedata = null;
-                try {
-                    imagedata = aMan.open("imagedata.txt");
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT);
-                }
-                InputStream wekaIndex;
-                wekaIndex=null;
-                try {
-                    wekaIndex = aMan.open("index.txt");
-                } catch (IOException e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                }
-                WekaWrapper wrap = null;
-                try{   
-                    
-                Toast.makeText(getApplicationContext(), "Running Weka" , Toast.LENGTH_SHORT).show();
-                wrap = new WekaWrapper();
-                Log.i(LOG_TAG,"wrapper created");
-                wrap.loadData(imagedata);
-                Log.i(LOG_TAG,"Data loaded");
-                wrap.loadIndex(wekaIndex);
-                Toast.makeText(getApplicationContext(), "Index loaded" , Toast.LENGTH_SHORT).show();
-                Log.i(LOG_TAG,"index loaded");
-                
-                output = wrap.runKMeans();
-                
-                wrap.describeClusters();
-                wrap.getMappings();
-                
-                Log.i(LOG_TAG,"k=luster finish");
-            } catch(Exception e)
+            public void onClick(View v) 
             {
-                e.printStackTrace();
-                Toast.makeText(getApplicationContext(), "Exception occured" + e.getMessage() + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
-
-            }
+             
+                startAsyncKM();
                 
-                text.setMovementMethod(new ScrollingMovementMethod());
-                text.setText(output);
-                Toast.makeText(getApplicationContext(), "Task complete", Toast.LENGTH_SHORT).show();
+//                AssetManager aMan = getAssets();                
+//                try {
+//                    imagedata = aMan.open("imagedata.txt");
+//                } catch (IOException e) {
+//                    // TODO Auto-generated catch block
+//                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT);
+//                }
+//                InputStream wekaIndex;
+//                wekaIndex=null;
+//                try {
+//                    wekaIndex = aMan.open("index.txt");
+//                } catch (IOException e1) {
+//                    // TODO Auto-generated catch block
+//                    e1.printStackTrace();
+//                }
+//                WekaWrapper wrap = null;
+//                try{   
+//                    
+//                Toast.makeText(getApplicationContext(), "Running Weka" , Toast.LENGTH_SHORT).show();
+//                wrap = new WekaWrapper();
+//                Log.i(LOG_TAG,"wrapper created");
+//                wrap.loadData(imagedata);
+//                Log.i(LOG_TAG,"Data loaded");
+//                wrap.loadIndex(wekaIndex);
+//                Toast.makeText(getApplicationContext(), "Index loaded" , Toast.LENGTH_SHORT).show();
+//                Log.i(LOG_TAG,"index loaded");
+//                
+//                output = wrap.runKMeans();
+//                
+//                wrap.describeClusters();
+//                wrap.getMappings();
+//                
+//                Log.i(LOG_TAG,"k=luster finish");
+//            } catch(Exception e)
+//            {
+//                e.printStackTrace();
+//                Toast.makeText(getApplicationContext(), "Exception occured" + e.getMessage() + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+//
+//            }
+                
+                
+                //text.setText(output);
+                //
             }
         });
 		
@@ -133,6 +137,18 @@ public class WekaDebugActivity extends Activity implements AsyncTaskRequestRespo
 		TextView text = (TextView) findViewById(R.id.annotations);
 		text.setText(loadIndexFile(1));
 		
+	}
+	
+	
+	private void startAsyncKM()
+	{
+        Toast.makeText(getApplicationContext(), "Executing Async KMeans in Background", Toast.LENGTH_LONG).show();
+        String output = "";
+        TextView text = (TextView) findViewById(R.id.annotations);
+        AsyncClusterer async_KM = new AsyncClusterer(this, this);                                
+        async_KM.execute(getApplicationContext());
+        text.setMovementMethod(new ScrollingMovementMethod());
+        Log.i("STARTASYNC", "Complete" );
 	}
 	
 	private String loadIndexFile(int whichOne)
@@ -218,6 +234,7 @@ public class WekaDebugActivity extends Activity implements AsyncTaskRequestRespo
 	{
 		AssetManager assetManager = getAssets();
 		try {
+		    
 			InputStream inpStream = assetManager.open(img_name);
 			Log.i(LOG_TAG, "image path - ");
 			TextView text = (TextView) findViewById(R.id.annotations);
@@ -278,6 +295,7 @@ public class WekaDebugActivity extends Activity implements AsyncTaskRequestRespo
 		// TODO Auto-generated method stub
 		TextView text = (TextView) findViewById(R.id.annotations);
 		text.setText(output);
+		Toast.makeText(getApplicationContext(), "Async Task" +asyncCode+ "complete", Toast.LENGTH_SHORT).show();
 	}
 	
 	@Override
