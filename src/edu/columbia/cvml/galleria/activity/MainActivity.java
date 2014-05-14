@@ -64,6 +64,7 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 	CustomStaggeredAdapter adapter = null;
 	StaggeredGridView gridView = null;
 	Map<String,ArrayList<String>> annoListMap = null;
+	int imageCount = 0;
 	/**
 	 * This will not work so great since the heights of the imageViews 
 	 * are calculated on the iamgeLoader callback ruining the offsets. To fix this try to get 
@@ -132,14 +133,28 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 		Log.i(LOG_TAG, "Service start called");
 		
 		// Call the clustering 
-        AsyncClusterer async_KM = new AsyncClusterer(this, this);                                
-        async_KM.execute(getApplicationContext());
+		if(checkRunCluster())
+		{
+			AsyncClusterer async_KM = new AsyncClusterer(this, this);                                
+			async_KM.execute(getApplicationContext());
+		}
 
 		idxMapMgr = new InvertedIndexManager(getApplicationContext(), AnnotatorRequestSenderAsync.INDEX_FILE);
 		annotMap = idxMapMgr.loadIndex();
 		idxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
 		faceDetMap = idxMapMgr.loadIndex();
 		loadSearchVocabJson();
+	}
+	
+	private boolean checkRunCluster()
+	{
+		Log.d(LOG_TAG, "LineCount = "+ ClusterFeatureManager.getClusteringFileLineCount());
+		Log.d(LOG_TAG, "ImageCount = "+ imageCount);
+		if(imageCount < ClusterFeatureManager.getClusteringFileLineCount() - 3)
+		{
+			return true;
+		}
+		return false;
 	}
 
 	private void loadSearchVocabJson()
@@ -218,6 +233,13 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 		cursor.close();*/
 
 		Map<String,ArrayList<String>> clusterMap = ClusterFeatureManager.loadClusterImageMap(getApplicationContext());
+		imageCount = 0;
+		Set<String> keyset = clusterMap.keySet();
+		for(String key : keyset)
+		{
+			ArrayList<String> images = clusterMap.get(key);
+			imageCount = imageCount + images.size();
+		}
 				
 		// Add the Face Detector Clusters
 		InvertedIndexManager idxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
@@ -248,7 +270,6 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 		getMenuInflater().inflate(R.menu.activity_main, menu);
 		searchView = (AutoCompleteTextView) menu.findItem(R.id.search).getActionView();
 		searchView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-		//searchView.setBackground(new ColorDrawable(R.color.white));
 
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,annotations);
 		searchView.setAdapter(adapter);

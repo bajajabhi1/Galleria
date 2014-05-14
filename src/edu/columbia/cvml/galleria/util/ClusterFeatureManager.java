@@ -1,6 +1,5 @@
 package edu.columbia.cvml.galleria.util;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -30,24 +29,29 @@ public class ClusterFeatureManager
 
 	static int lineCounter = 0;
 	static ClusterFeatureManager singleMgr;
-	
+
 	private ClusterFeatureManager(Context context)
 	{
 		this.ctx = context;
 		init();
 	}
-	
-	static public synchronized ClusterFeatureManager getInstance(Context context){
-	    if (null==singleMgr){
-	        singleMgr = new ClusterFeatureManager(context);
-	    }
-	        
-	    return singleMgr;
-	    
-	}
-	
 
-	static public void init()
+	public static synchronized ClusterFeatureManager getInstance(Context context){
+		if (null==singleMgr)
+		{
+			singleMgr = new ClusterFeatureManager(context);
+		}
+
+		return singleMgr;
+
+	}
+
+	public static int getClusteringFileLineCount()
+	{
+		return lineCounter;
+	}
+
+	public static void init()
 	{
 		// Initialize the file only if there is no existing
 		if (null == FileOperation.readFileFromInternalStorage(ctx, FEATURE_FILE_CSV))
@@ -57,8 +61,8 @@ public class ClusterFeatureManager
 			Log.d(LOG_TAG,"Initialized new feature file");
 		}
 		else {
-		    lineCounter = imageFeatureMap.size();
-		    Log.d(LOG_TAG, "Initialzied a new lineCounter");
+			lineCounter = imageFeatureMap.size();
+			Log.d(LOG_TAG, "Initialzied a new lineCounter");
 		}
 	}
 
@@ -68,25 +72,25 @@ public class ClusterFeatureManager
 	synchronized static public void  addImageEntry(String imageName, String featureValues, String topK_featureStr)
 	{
 		Log.d(LOG_TAG," in addImageEntry");
-		
+
 		if (!imageFeatureMap.containsKey(imageName) && (imageName!=null) && (!imageName.equals(null))) {
-		    
-            
-        
-		    loadFeatureLineImageMap();
-		    loadImageFeatureMap();
-		    lineCounter++;
-		    featureLineImageMap.put(lineCounter,imageName);
-		    // Put Top K feature in this map
-		    imageFeatureMap.put(imageName, topK_featureStr);
-		    FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE_CSV, featureValues + "\n");
-		    writeFeatureLineImageMap();
-		    writeImageFeatureMap();
+
+
+
+			loadFeatureLineImageMap();
+			loadImageFeatureMap();
+			lineCounter++;
+			featureLineImageMap.put(lineCounter,imageName);
+			// Put Top K feature in this map
+			imageFeatureMap.put(imageName, topK_featureStr);
+			FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE_CSV, featureValues + "\n");
+			writeFeatureLineImageMap();
+			writeImageFeatureMap();
 		}
 		else{
-		    Log.w(LOG_TAG, "Averted messed up/duplicate entry for file "+imageName);
+			Log.w(LOG_TAG, "Averted messed up/duplicate entry for file "+imageName);
 		}
-		
+
 	}
 
 	static public String loadClusterImageFile()
