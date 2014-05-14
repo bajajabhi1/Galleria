@@ -99,7 +99,7 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 			Log.d(LOG_TAG, "Addding Cluster to imagePath - " + cluster);
 			if(!clusterMap.get(cluster).isEmpty())
 			{
-				imagePath[index] = clusterMap.get(cluster).get(0);
+				imagePath[index] = imageBasePath + clusterMap.get(cluster).get(0);
 				Log.d(LOG_TAG, "IMage added to imagePath - " + imagePath[index]);
 			}
 			posClusterMap.put(index, cluster);
@@ -148,9 +148,9 @@ public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 	
 	private boolean checkRunCluster()
 	{
-		Log.d(LOG_TAG, "LineCount = "+ ClusterFeatureManager.getClusteringFileLineCount());
+		Log.d(LOG_TAG, "LineCount = "+ ClusterFeatureManager.getClusteringFileLineCount(getApplicationContext()));
 		Log.d(LOG_TAG, "ImageCount = "+ imageCount);
-		if(imageCount < ClusterFeatureManager.getClusteringFileLineCount() - 3)
+		if(imageCount < ClusterFeatureManager.getClusteringFileLineCount(getApplicationContext()) - 3)
 		{
 			return true;
 		}
