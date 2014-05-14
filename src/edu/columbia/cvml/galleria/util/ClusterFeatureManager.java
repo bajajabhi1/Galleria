@@ -53,11 +53,19 @@ public class ClusterFeatureManager
 	public void addImageEntry(String imageName, String featureValues, String topK_featureStr)
 	{
 		Log.d(LOG_TAG," in addImageEntry");
-		lineCounter++;
-		featureLineImageMap.put(lineCounter,imageName);
-		// Put Top K feature in this map
-		imageFeatureMap.put(imageName, topK_featureStr);
-		FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE_CSV, featureValues + "\n");
+		
+		//if (!imageFeatureMap.containsKey(imageName) && (imageName!=null) && (!imageName.equals(null))) {
+		    
+		    lineCounter++;
+		    featureLineImageMap.put(lineCounter,imageName);
+		    // Put Top K feature in this map
+		    imageFeatureMap.put(imageName, topK_featureStr);
+		    FileOperation.writeFileToInternalStorage(ctx, FEATURE_FILE_CSV, featureValues + "\n");
+//		}
+//		else{
+//		    Log.w(LOG_TAG, "Averted messed up/duplicate entry for file "+imageName);
+//		}
+		
 	}
 
 	public String loadClusterImageFile()
