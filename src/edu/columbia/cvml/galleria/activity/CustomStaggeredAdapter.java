@@ -13,6 +13,12 @@ import edu.columbia.cvml.galleria.views.ScaleImageView;
 
 public class CustomStaggeredAdapter extends ArrayAdapter<String> {
 
+	@Override
+	public void clear() {
+		// TODO Auto-generated method stub
+		super.clear();
+	}
+
 	private static final int ANNO_DESIREDWIDTH = 480;
 	private static final int ANNO_DESIREDHEIGHT = 320;
 	

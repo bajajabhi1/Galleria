@@ -15,7 +15,7 @@
         android:allowBackup="true" android:largeHeap="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@android:style/Theme.Holo.Light">
         <activity
             android:name="edu.columbia.cvml.galleria.activity.MainActivity"
             android:label="@string/app_name" >
