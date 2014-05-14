@@ -38,6 +38,8 @@ public class WekaWrapper {
    
    private HashMap<String, ArrayList<String>> cMapping = new HashMap<String, ArrayList<String>>();
    
+   public String tempfile = "tempfile.csv";
+   
    public String loadData(InputStream filepath) throws Exception
    {
    
@@ -50,31 +52,7 @@ public class WekaWrapper {
 
    }
    
-   public String tempfile = "tempfile.csv";
-   public String loadData(String filestring) throws Exception
-   {
-       
-       String FILENAME = "hello_file";
-       String string = "hello world!";
 
-
-
-       PrintWriter out = new PrintWriter(tempfile);
-       
-       out.write(filestring);
-       out.close();
-       
-       Log.i(tag, "New file: " + tempfile + " generated");
-       File file = new File(tempfile);
-       CSVLoader loader = new CSVLoader();
-       
-       loader.setSource(file);
-       data = loader.getDataSet();
-       Log.i(tag,data.toSummaryString());
-       Log.i(tag, "Data loaded");       
-       return data.toSummaryString();
-
-   }
 
    //New loadIndex to interface with Abhinav's code
    public void loadIndex(Map<Integer,String> indexMap) throws Exception
@@ -107,20 +85,24 @@ public class WekaWrapper {
        kmeans.setMaxIterations(1000);
        kmeans.setPreserveInstancesOrder(true);
        kmeans.setNumClusters(numberOfClusters);
+       Log.i(tag, "No. of samples loaded: "+data.size());
        kmeans.buildClusterer(data);
+       
        int[] assignments = kmeans.getAssignments();
        
        HashMap<String, ArrayList<String>> hash = new HashMap<String, ArrayList<String>>();
 
         int i=0;
         for(int clusterNum : assignments) {               
+            
             Log.i(tag,"New line\n");
-               Log.i(tag,"Instance %d -> Cluster %d \n"+i +" " + clusterNum);
-               if (hash.get(clusterNum)==null){
+            
+               Log.i(tag,"Instance "+(i+1)+" -> Cluster "+clusterNum+" -> FileName "+indexMap.get(i+1)+ " \n" );
+               if (hash.get(""+clusterNum)==null){
                    hash.put(""+clusterNum, new ArrayList<String>());                     
                }                
                    ArrayList<String> array = hash.get(""+clusterNum);
-                   array.add(indexMap.get(i));
+                   array.add(indexMap.get(i+1));
                i++;
         }
         
@@ -129,8 +111,13 @@ public class WekaWrapper {
        ClusterEvaluation eval = new ClusterEvaluation();
        eval.setClusterer(kmeans);
        eval.evaluateClusterer(data);
-       Log.i(tag,eval.clusterResultsToString());
-
+       //Log.i(tag,eval.clusterResultsToString());
+       Log.i(tag, "CHECKING INDEX");
+       for (Integer i1 : indexMap.keySet())
+       {
+           Log.i(tag, i1.toString()+" "+indexMap.get(i1));
+           
+       }
        return "Weka execution complete \n"+eval.clusterResultsToString();
         
 //        Instances centroids = kmeans.getClusterCentroids();

@@ -66,18 +66,11 @@ public class AsyncClusterer extends AsyncTask <Context, Object, String>{
         String output = "";
         ClusterFeatureManager CFM = new ClusterFeatureManager(context);
         WekaWrapper wek = new WekaWrapper();
-        Log.i(LOG_TAG,"wrapper created");        
+        Log.i(LOG_TAG,"wrapper created");   
+        Map<String,ArrayList<String>> indexMap = null;
         InputStream image_csv;
        
    try {
-       
-//        Log.i(LOG_TAG,"Trying path" + CFM.FEATURE_FILE_CSV);
-//        image_csv = new FileInputStream(CFM.FEATURE_FILE_CSV);
-//        Log.i(LOG_TAG, "CSV file successfully loaded");
-//
-//        //String featureFile = featureMgr.loadClusterImageFile();
-//        if(null == image_csv)
-//            output = "EMPTY!";
         
        String csv_string = CFM.loadClusterImageFile();
        Log.i(LOG_TAG, "CSV String loaded"); 
@@ -89,14 +82,21 @@ public class AsyncClusterer extends AsyncTask <Context, Object, String>{
        InputStream fileinput = currentActivity.openFileInput(wek.tempfile);
        
        wek.loadData(fileinput);
-       
+       wek.setNumberOfClusters(4);
        Log.i(LOG_TAG,"Data loaded");
-        wek.loadIndex(CFM.loadFeatureLineImageMap());           Log.i(LOG_TAG,"index loaded");
-        output = wek.runKMeans();                        Log.i(LOG_TAG,output);
-        wek.describeClusters();
-        Map<String,ArrayList<String>> indexMap = wek.getMappings();
-        ClusterFeatureManager.writeClusterFeatureMap(context, indexMap);
+        wek.loadIndex(CFM.loadFeatureLineImageMap());           
+        Log.i(LOG_TAG,"index loaded");
+        output = wek.runKMeans();                        
+        Log.i(LOG_TAG,output);
+        //wek.describeClusters();
         
+        
+        indexMap = wek.getMappings();
+        
+        
+        Log.i(LOG_TAG, "Map created of size" + indexMap.size());
+        ClusterFeatureManager.writeClusterFeatureMap(context, indexMap);
+        Log.i(LOG_TAG, "Finished storing ClusterFeatureMap");
    } catch (FileNotFoundException e) {
    
        // TODO Auto-generated catch block
@@ -105,11 +105,36 @@ public class AsyncClusterer extends AsyncTask <Context, Object, String>{
             e.printStackTrace();            
         }
    
+       Log.i(LOG_TAG, "AsyncClusterer is shutting down");
+       
+       output = prettyPrint(wek.getMappings());
        return output;
        }
     
     protected void onPostExecute(String result) {
         //Log.i(LOG_TAG, "Result of Image Detection - "+ imageFileName + FACEDETECTOR_FILENAME_SEPARATOR + result);
+        Log.i(LOG_TAG, "onPost Execute executing");
         delegate.processFinish(ASYNC_TASK_CODE, result);
     }
+    
+    public String prettyPrint(Map<String, ArrayList<String>> indexMap)
+    {   if (indexMap==null)
+            return "ERROR";
+    
+        
+        int l = indexMap.size();
+        ArrayList<String> tempArray;
+        String output = "";
+        for (int i=0; i<l; i++)
+        {
+            output += "Cluster No: " + i + "\t\nImages: ";
+            tempArray = indexMap.get(new Integer(i).toString());
+            for (String t : tempArray)
+               { output= output+ t+",";}
+            
+            output+='\n';
+            
+        }
+        return output;
+                }
 }
