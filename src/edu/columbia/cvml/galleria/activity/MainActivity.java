@@ -18,10 +18,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.AssetManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,8 +34,11 @@ import com.origamilabs.library.views.StaggeredGridView.OnItemClickListener;
 
 import edu.columbia.cvml.galleria.VO.FeatureValueObject;
 import edu.columbia.cvml.galleria.async.AnnotatorRequestSenderAsync;
+import edu.columbia.cvml.galleria.async.AsyncClusterer;
+import edu.columbia.cvml.galleria.async.AsyncTaskRequestResponse;
 import edu.columbia.cvml.galleria.async.FaceDetectorAsync;
 import edu.columbia.cvml.galleria.services.ImageDetectorService;
+import edu.columbia.cvml.galleria.util.ClusterFeatureManager;
 import edu.columbia.cvml.galleria.util.FaceDetectionConstants;
 import edu.columbia.cvml.galleria.util.InvertedIndexManager;
 
@@ -53,7 +53,7 @@ import edu.columbia.cvml.galleria.util.InvertedIndexManager;
  *
  */
 @SuppressLint("NewApi")
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements AsyncTaskRequestResponse {
 	public static String imageBasePath = "/storage/emulated/0/DCIM/100MEDIA/";
 	String LOG_TAG =  "MainActivity";
 	Map<String,String> imagePathMap = new HashMap<String,String>();
@@ -88,7 +88,7 @@ public class MainActivity extends Activity {
 		gridView.setItemMargin(margin); // set the GridView margin
 		gridView.setPadding(margin, 0, margin, 0); // have the margin on the sides as well 
 
-		final Map<String,ArrayList<String>> clusterMap = simulateClusterMethod();
+		final Map<String,ArrayList<String>> clusterMap = loadClusters();
 		final Map<Integer,String> posClusterMap = new HashMap<Integer,String>();
 		Set<String> clusterNameSet = clusterMap.keySet();
 		final String[] imagePath = new String[clusterNameSet.size()];
@@ -130,6 +130,10 @@ public class MainActivity extends Activity {
 		Intent i= new Intent(getApplicationContext(), ImageDetectorService.class);
 		getApplicationContext().startService(i);
 		Log.i(LOG_TAG, "Service start called");
+		
+		// Call the clustering 
+        AsyncClusterer async_KM = new AsyncClusterer(this, this);                                
+        async_KM.execute(getApplicationContext());
 
 		idxMapMgr = new InvertedIndexManager(getApplicationContext(), AnnotatorRequestSenderAsync.INDEX_FILE);
 		annotMap = idxMapMgr.loadIndex();
@@ -177,9 +181,9 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	private Map<String,ArrayList<String>> simulateClusterMethod()
+	private Map<String,ArrayList<String>> loadClusters()
 	{
-		Map<String,ArrayList<String>> clusterMap = new HashMap<String,ArrayList<String>>();
+		/*Map<String,ArrayList<String>> clusterMap = new HashMap<String,ArrayList<String>>();
 		Uri extUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 		String[] projection = new String[] { MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.Images.Media.DATA,
 				MediaStore.MediaColumns.DATE_ADDED, MediaStore.MediaColumns._ID };
@@ -211,8 +215,10 @@ public class MainActivity extends Activity {
 			cluster2List.add(imagePathList.get(i));			
 		}
 		clusterMap.put("Cluster2",cluster2List);
-		cursor.close();
+		cursor.close();*/
 
+		Map<String,ArrayList<String>> clusterMap = ClusterFeatureManager.loadClusterImageMap(getApplicationContext());
+				
 		// Add the Face Detector Clusters
 		InvertedIndexManager idxMapMgr = new InvertedIndexManager(getApplicationContext(), FaceDetectorAsync.INDEX_FILE);
 		Map<String,List<FeatureValueObject>> facesMap = idxMapMgr.loadIndex();
@@ -397,4 +403,11 @@ public class MainActivity extends Activity {
 			"insect","waterfall","adventure","statue","waves","backyard","cupcake","friends","grave","darkness","building","feet","reflection","phone","windows",
 			"industry","grass","children","bugs"
 			,"ocean","boat","train","sunset","reflections","mother","landmark","raindrops","model","egg","drawing","reserve"		};
+	@Override
+	public void processFinish(String asyncCode, String output) {
+		Log.i(LOG_TAG, "Clustering is done");
+		Intent intent = getIntent();
+		finish();
+		startActivity(intent);
+	}
 }
