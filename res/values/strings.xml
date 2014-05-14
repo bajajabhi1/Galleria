@@ -2,8 +2,11 @@
 <resources>
 
     <string name="menu_debugScreen">DebugScreen</string>
+    <string name="weka_debug_string">WekaDebug</string>
     <string name="menu_MainScreen">MainScreen</string>
     <string name="app_name">Galleria</string>
     <string name="ImageServiceName">GalleriaImageService</string>
-
+	    <string name="app_label">Galleria</string>
+	        <string name="search_hint">Image search</string>
+	            <string name="search_title">SearchBar</string>
 </resources>

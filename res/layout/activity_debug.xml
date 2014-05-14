@@ -20,7 +20,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="LoadFeatureFile" />
-   
+
+      <Button
+        android:id="@+id/AndroidWekaTest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AndroidWekaTest" />
+      
    <TextView
     	android:id="@+id/annotations"
     	android:layout_width="wrap_content"

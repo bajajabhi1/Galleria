@@ -26,7 +26,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import edu.columbia.cvml.galleria.VO.FeatureValueObject;
-import edu.columbia.cvml.galleria.Weka.WekaWrapper;
+import edu.columbia.cvml.galleria.weka.WekaWrapper;
 import edu.columbia.cvml.galleria.async.AnnotatorRequestSenderAsync;
 import edu.columbia.cvml.galleria.async.AsyncTaskRequestResponse;
 import edu.columbia.cvml.galleria.async.FaceDetectorAsync;
@@ -82,7 +82,7 @@ public class WekaDebugActivity extends Activity implements AsyncTaskRequestRespo
                     imagedata = aMan.open("imagedata.txt");
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT);
                 }
                 InputStream wekaIndex;
                 wekaIndex=null;
@@ -101,12 +101,14 @@ public class WekaDebugActivity extends Activity implements AsyncTaskRequestRespo
                 wrap.loadData(imagedata);
                 Log.i(LOG_TAG,"Data loaded");
                 wrap.loadIndex(wekaIndex);
-                
                 Toast.makeText(getApplicationContext(), "Index loaded" , Toast.LENGTH_SHORT).show();
-                
                 Log.i(LOG_TAG,"index loaded");
                 
                 output = wrap.runKMeans();
+                
+                wrap.describeClusters();
+                wrap.getMappings();
+                
                 Log.i(LOG_TAG,"k=luster finish");
             } catch(Exception e)
             {
@@ -281,7 +283,7 @@ public class WekaDebugActivity extends Activity implements AsyncTaskRequestRespo
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.weka_debug_main, menu);
+		getMenuInflater().inflate(R.menu.debug_main, menu);
 		return true;
 	}
 	
